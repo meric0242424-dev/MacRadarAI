@@ -13,7 +13,7 @@ object ApiClient {
     val API_KEY: String = BuildConfig.FOOTBALL_API_KEY
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = HttpLoggingInterceptor.Level.NONE
     }
 
     private val okHttpClient = OkHttpClient.Builder()

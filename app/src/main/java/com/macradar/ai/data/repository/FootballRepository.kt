@@ -20,7 +20,6 @@ class FootballRepository {
     private val apiService: FootballApiService = ApiClient.footballApiService
     private val apiKey: String = ApiClient.API_KEY
 
-    // Cache
     private val fixtureCache = mutableMapOf<String, List<FixtureResponse>>()
     private val predictionCache = mutableMapOf<Int, PredictionModel>()
 
@@ -28,7 +27,6 @@ class FootballRepository {
         try {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
-            // Check cache first
             fixtureCache[today]?.let {
                 return@withContext Result.Success(it)
             }
@@ -37,7 +35,6 @@ class FootballRepository {
 
             if (response.isSuccessful) {
                 val fixtures = response.body()?.response ?: emptyList()
-                // Sort by league priority
                 val sorted = sortFixturesByLeaguePriority(fixtures)
                 fixtureCache[today] = sorted
                 Result.Success(sorted)
@@ -162,8 +159,8 @@ class FootballRepository {
             try {
                 val response = apiService.getStandings(leagueId, season, apiKey)
                 if (response.isSuccessful) {
-                    val standings = response.body()?.response?.firstOrNull()
-                        ?.league?.standings?.firstOrNull() ?: emptyList()
+                    val standingResponse: StandingResponse? = response.body()?.response?.firstOrNull()
+                    val standings: List<StandingItem> = standingResponse?.league?.standings?.firstOrNull() ?: emptyList()
                     Result.Success(standings)
                 } else {
                     Result.Error("Puan durumu yüklenemedi")
@@ -195,13 +192,11 @@ class FootballRepository {
         leagueId: Int,
         season: Int
     ): Result<PredictionModel> = withContext(Dispatchers.IO) {
-        // Check cache
         predictionCache[fixtureId]?.let {
             return@withContext Result.Success(it)
         }
 
         try {
-            // Try to get API prediction first
             val apiPredResponse = apiService.getPredictions(fixtureId, apiKey)
             if (apiPredResponse.isSuccessful) {
                 val apiPred = apiPredResponse.body()?.response?.firstOrNull()
@@ -215,7 +210,6 @@ class FootballRepository {
             // Fall through to AI engine
         }
 
-        // Fallback: Use our AI engine with team statistics
         try {
             val homeStats = try {
                 (getTeamStatistics(homeTeamId, leagueId, season) as? Result.Success)?.data
@@ -237,7 +231,6 @@ class FootballRepository {
             Result.Success(prediction)
 
         } catch (e: Exception) {
-            // Return default prediction
             val defaultPred = AIPredictionEngine.calculatePrediction(null, null, null, homeTeamId, awayTeamId)
                 .copy(matchId = fixtureId)
             Result.Success(defaultPred)
@@ -280,7 +273,6 @@ class FootballRepository {
     }
 
     private fun sortFixturesByLeaguePriority(fixtures: List<FixtureResponse>): List<FixtureResponse> {
-        // Priority leagues: Süper Lig, Premier League, La Liga, Bundesliga, Serie A, Ligue 1, UCL
         val priorityLeagueIds = listOf(203, 39, 140, 78, 135, 61, 2, 3)
         return fixtures.sortedWith(compareBy(
             { if (it.league.id in priorityLeagueIds) priorityLeagueIds.indexOf(it.league.id) else 999 },
@@ -288,7 +280,6 @@ class FootballRepository {
         ))
     }
 
-    // Helper to convert timestamp to readable time
     fun formatMatchTime(timestamp: Long): String {
         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         sdf.timeZone = TimeZone.getTimeZone("Europe/Istanbul")

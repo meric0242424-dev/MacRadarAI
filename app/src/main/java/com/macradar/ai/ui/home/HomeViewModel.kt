@@ -28,36 +28,43 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _matches.value = Result.Loading
             val result = repository.getTodayMatches()
-            if (result is Result.Success) allFixtures = result.data
-            _matches.value = result
+            if (result is Result.Success) {
+                allFixtures = result.data
+                _matches.value = Result.Success(result.data.take(25))
+            } else {
+                _matches.value = result
+            }
         }
     }
 
     fun loadTomorrowMatches() {
         viewModelScope.launch {
             _matches.value = Result.Loading
-            _matches.value = repository.getTomorrowMatches()
+            val result = repository.getTomorrowMatches()
+            if (result is Result.Success) {
+                _matches.value = Result.Success(result.data.take(25))
+            } else {
+                _matches.value = result
+            }
         }
     }
 
     fun loadPopularMatches() {
         val popularLeagueIds = setOf(39, 140, 78, 135, 2, 203, 61, 94, 88, 71)
         val popular = allFixtures.filter { it.league.id in popularLeagueIds }
-        _matches.value = Result.Success(if (popular.isEmpty()) allFixtures else popular)
+        _matches.value = Result.Success((if (popular.isEmpty()) allFixtures else popular).take(25))
     }
 
     fun loadTopPredictions() {
         viewModelScope.launch {
             val result = repository.getTodayMatches()
             if (result is Result.Success) {
-                // Take top upcoming or live matches and score them
                 val topMatches = result.data
                     .filter { it.fixture.status.short in listOf("NS", "1H", "HT", "2H") }
                     .take(10)
 
                 val predictions = topMatches.mapIndexed { index, fixture ->
                     val confidence = (90 - index * 2).coerceIn(70, 95)
-                    // Determine predicted winner by simple heuristic for list display
                     val winner = if (index % 3 == 2) "AWAY" else if (index % 3 == 1) "DRAW" else "HOME"
                     TopPrediction(
                         rank = index + 1,

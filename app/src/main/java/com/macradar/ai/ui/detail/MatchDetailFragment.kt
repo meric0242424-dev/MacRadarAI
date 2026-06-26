@@ -85,7 +85,6 @@ class MatchDetailFragment : Fragment() {
                         binding.tvMatchScore.text = "${fixture.goals.home ?: 0} - ${fixture.goals.away ?: 0}  ${elapsed}'"
                         binding.tvMatchScore.setTextColor(ContextCompat.getColor(requireContext(), R.color.live_red))
                     } else {
-                        // FT
                         binding.tvMatchScore.text = "${fixture.goals.home ?: 0} - ${fixture.goals.away ?: 0}"
                         binding.tvMatchScore.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
                     }
@@ -113,8 +112,10 @@ class MatchDetailFragment : Fragment() {
     private fun displayPrediction(pred: PredictionModel) {
         binding.apply {
             tvConfidenceScore.text = pred.confidenceScore.toString()
-            circularProgressBar.progress = pred.confidenceScore.toFloat()
-            circularProgressBar.progressBarColor = ScoreColorHelper.getScoreColor(requireContext(), pred.confidenceScore)
+            circularProgressBar.progress = pred.confidenceScore
+            circularProgressBar.progressTintList = android.content.res.ColorStateList.valueOf(
+                ScoreColorHelper.getScoreColor(requireContext(), pred.confidenceScore)
+            )
 
             tvHomeWinPercent.text = "%${pred.homeWinProbability}"
             tvDrawPercent.text = "%${pred.drawProbability}"

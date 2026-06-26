@@ -20,8 +20,7 @@ object ApiClient {
         .addInterceptor(loggingInterceptor)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("x-rapidapi-host", "v3.football.api-sports.io")
-                .addHeader("x-rapidapi-key", API_KEY)
+                .addHeader("x-apisports-key", API_KEY)
                 .build()
             chain.proceed(request)
         }

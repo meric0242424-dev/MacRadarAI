@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.macradar.ai.ui.home.HomeFragment"
+        android:label="Ana Sayfa"
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/actionHomeToMatchDetail"
+            app:destination="@id/matchDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/matchDetailFragment"
+        android:name="com.macradar.ai.ui.detail.MatchDetailFragment"
+        android:label="Maç Detayı"
+        tools:layout="@layout/fragment_match_detail">
+
+        <argument
+            android:name="fixtureId"
+            app:argType="integer" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/matchesFragment"
+        android:name="com.macradar.ai.ui.matches.MatchesFragment"
+        android:label="Maçlar"
+        tools:layout="@layout/fragment_matches" />
+
+    <fragment
+        android:id="@+id/aiRadarFragment"
+        android:name="com.macradar.ai.ui.radar.AIRadarFragment"
+        android:label="AI Radar"
+        tools:layout="@layout/fragment_ai_radar" />
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.macradar.ai.ui.history.HistoryFragment"
+        android:label="Geçmiş"
+        tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.macradar.ai.ui.profile.ProfileFragment"
+        android:label="Profil"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>

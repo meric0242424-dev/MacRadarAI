@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/background_dark">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp">
+
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_arrow_back"
+                android:padding="8dp"
+                android:contentDescription="Geri" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MAÇ DETAYI"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <ImageView
+                android:id="@+id/btnShare"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_share"
+                android:padding="8dp"
+                android:contentDescription="Paylaş" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvLeagueName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="Süper Lig" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" - "
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvMatchDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="17 Haziran 2026" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/ivHomeTeam"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:contentDescription="Ev Sahibi" />
+
+                <TextView
+                    android:id="@+id/tvHomeTeam"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    tools:text="Galatasaray" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingHorizontal="12dp">
+
+                <TextView
+                    android:id="@+id/tvMatchScore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    tools:text="20:00" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/ivAwayTeam"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:contentDescription="Deplasman" />
+
+                <TextView
+                    android:id="@+id/tvAwayTeam"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    tools:text="Beşiktaş" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/background_dark"
+            app:tabSelectedTextColor="@color/accent_green"
+            app:tabTextColor="@color/text_hint"
+            app:tabIndicatorColor="@color/accent_green"
+            app:tabIndicatorHeight="2dp"
+            app:tabMode="scrollable" />
+
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="320dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="20dp">
+
+            <ScrollView
+                android:id="@+id/scrollViewGeneral"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <ProgressBar
+                        android:id="@+id/progressPrediction"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardPrediction"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        app:cardBackgroundColor="@color/background_card"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/border_color"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <!-- Confidence Score -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Güven Skoru"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="11sp"
+                                        android:gravity="center" />
+
+                                    <ProgressBar
+                                        android:id="@+id/circularProgressBar"
+                                        android:layout_width="100dp"
+                                        android:layout_height="100dp"
+                                        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                        android:layout_marginTop="8dp"
+                                        android:max="100"
+                                        android:progress="75" />
+
+                                    <TextView
+                                        android:id="@+id/tvConfidenceScore"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textColor="@color/accent_green"
+                                        android:textSize="24sp"
+                                        android:textStyle="bold"
+                                        android:gravity="center"
+                                        tools:text="84" />
+
+                                    <TextView
+                                        android:id="@+id/tvRiskLevel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:textColor="@color/win_color"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:gravity="center"
+                                        tools:text="Düşük Risk" />
+
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="16dp">
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="horizontal">
+                                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                                            android:text="Ev Sahibi" android:textColor="@color/text_secondary" android:textSize="11sp" />
+                                        <TextView android:id="@+id/tvHomeWinPercent" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" tools:text="%47" />
+                                    </LinearLayout>
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="horizontal"
+                                        android:layout_marginTop="12dp">
+                                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                                            android:text="Beraberlik" android:textColor="@color/text_secondary" android:textSize="11sp" />
+                                        <TextView android:id="@+id/tvDrawPercent" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" tools:text="%28" />
+                                    </LinearLayout>
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="horizontal"
+                                        android:layout_marginTop="12dp">
+                                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                                            android:text="Deplasman" android:textColor="@color/text_secondary" android:textSize="11sp" />
+                                        <TextView android:id="@+id/tvAwayWinPercent" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" tools:text="%25" />
+                                    </LinearLayout>
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <View android:layout_width="match_parent" android:layout_height="1dp"
+                                android:background="@color/divider_color" android:layout_marginVertical="16dp" />
+
+                            <!-- Goal Predictions -->
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="2.5 Üst"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressOver25" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_green" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvOver25Percent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%64" />
+                            </LinearLayout>
+
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="2.5 Alt"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressUnder25" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_blue" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvUnder25Percent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%36" />
+                            </LinearLayout>
+
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="KG Var"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressBttsYes" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_green" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvBttsYesPercent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%59" />
+                            </LinearLayout>
+
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="KG Yok"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressBttsNo" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_blue" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvBttsNoPercent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%41" />
+                            </LinearLayout>
+
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="İY Gol Var"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressHtGoalYes" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_green" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvHtGoalYesPercent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%71" />
+                            </LinearLayout>
+
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="12dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="İY Gol Yok"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressHtGoalNo" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_blue" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvHtGoalNoPercent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%29" />
+                            </LinearLayout>
+
+                            <View android:layout_width="match_parent" android:layout_height="1dp"
+                                android:background="@color/divider_color" android:layout_marginBottom="16dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="TAHMİN SKORU"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:layout_marginBottom="8dp" />
+
+                            <TextView
+                                android:id="@+id/tvPredictedScore"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/accent_green"
+                                android:textSize="40sp"
+                                android:textStyle="bold"
+                                android:layout_gravity="center_horizontal"
+                                tools:text="2 - 1" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+            </ScrollView>
+
+            <LinearLayout android:id="@+id/layoutStats" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:padding="16dp" android:visibility="gone">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="İstatistikler yükleniyor..." android:textColor="@color/text_secondary" android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/layoutComparison" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:padding="16dp" android:visibility="gone">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Karşılaştırma yükleniyor..." android:textColor="@color/text_secondary" android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/layoutSquads" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:padding="16dp" android:visibility="gone">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Kadrolar yükleniyor..." android:textColor="@color/text_secondary" android:textSize="14sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

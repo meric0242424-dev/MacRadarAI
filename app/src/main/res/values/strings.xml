@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Maç Radar AI</string>
+    <string name="app_tagline">Yapay Zeka Destekli Futbol Analiz Merkezi</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_matches">Maçlar</string>
+    <string name="nav_ai_radar">AI Radar</string>
+    <string name="nav_history">Geçmiş</string>
+    <string name="nav_profile">Profil</string>
+    
+    <!-- Home Screen -->
+    <string name="today_matches">Bugünkü Maçlar</string>
+    <string name="tomorrow">Yarın</string>
+    <string name="today">Bugün</string>
+    <string name="popular">Popüler</string>
+    <string name="ai_score">AI SKORU</string>
+    <string name="view_prediction">Tahmini Gör</string>
+    <string name="strongest_predictions">Günün En Güçlü Tahminleri</string>
+    
+    <!-- Match Detail -->
+    <string name="match_detail">Maç Detayı</string>
+    <string name="general">Genel</string>
+    <string name="statistics">İstatistik</string>
+    <string name="comparison">Karşılaştırma</string>
+    <string name="squads">Kadrolar</string>
+    <string name="news">Haberler</string>
+    
+    <!-- AI Prediction -->
+    <string name="ai_prediction">AI Tahmini</string>
+    <string name="confidence_score">Güven Skoru</string>
+    <string name="home_win">Ev Sahibi Kazanır</string>
+    <string name="draw">Beraberlik</string>
+    <string name="away_win">Deplasman Kazanır</string>
+    <string name="low_risk">Düşük Risk</string>
+    <string name="medium_risk">Orta Risk</string>
+    <string name="high_risk">Yüksek Risk</string>
+    
+    <!-- Goal Predictions -->
+    <string name="goal_predictions">Gol Tahminleri</string>
+    <string name="over_2_5">2.5 Üst</string>
+    <string name="under_2_5">2.5 Alt</string>
+    <string name="both_score_yes">Karşılıklı Gol Var</string>
+    <string name="both_score_no">Karşılıklı Gol Yok</string>
+    <string name="ht_goal_yes">İlk Yarı Gol Var</string>
+    <string name="ht_goal_no">İlk Yarı Gol Yok</string>
+    <string name="view_detail_analysis">Detaylı Analizi Gör</string>
+    
+    <!-- Stats -->
+    <string name="team_form">TAKIM FORMU (SON 5 MAÇ)</string>
+    <string name="attack_analysis">HÜCUM ANALİZİ</string>
+    <string name="defense_analysis">SAVUNMA ANALİZİ</string>
+    <string name="league_standing">LİGDEKİ DURUM</string>
+    <string name="key_players">KRİTİK OYUNCULAR</string>
+    <string name="ai_comment">MAÇ HAKKINDA AI YORUMU</string>
+    <string name="prediction_result">TAHMİN SONUCU</string>
+    <string name="most_likely_score">En Muhtemel Skor</string>
+    <string name="alternative_scores">Alternatif Skorlar</string>
+    
+    <!-- History -->
+    <string name="prediction_history">TAHMİN GEÇMİŞİ</string>
+    <string name="all">Tümü</string>
+    <string name="correct">Doğru</string>
+    <string name="wrong">Yanlış</string>
+    <string name="success_rate">Başarı Oranı</string>
+    
+    <!-- Premium -->
+    <string name="go_premium">PREMIUM\'A GEÇ</string>
+    <string name="premium_desc">Sınırsız tahmin, reklamsız kullanım ve daha fazlası seni bekliyor!</string>
+    <string name="upgrade_now">Hemen Yükselt</string>
+    <string name="unlimited_predictions">Sınırsız Tahmin</string>
+    <string name="ad_free">Reklamsız Kullanım</string>
+    <string name="all_leagues">Tüm Ligler</string>
+    <string name="detailed_stats">Detaylı İstatistikler</string>
+    <string name="ai_radar_top10">AI Radar (En Güçlü 10)</string>
+    <string name="notifications">Bildirimler</string>
+    <string name="history_access">Tahmin Geçmişi</string>
+    
+    <!-- Free Plan -->
+    <string name="free_plan">ÜCRETSİZ</string>
+    <string name="daily_15">Günlük 15 Tahmin</string>
+    <string name="free_btn">Ücretsiz</string>
+    
+    <!-- Daily limit -->
+    <string name="daily_limit">Günlük Tahmin Hakkı</string>
+    <string name="free_user">Ücretsiz Kullanıcı</string>
+    <string name="daily_limit_info">Her gün 00:00\'da yenilenir</string>
+    
+    <!-- Errors -->
+    <string name="error_network">İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.</string>
+    <string name="error_loading">Veriler yüklenemedi. Tekrar deneyin.</string>
+    <string name="error_api">API bağlantı hatası.</string>
+    <string name="retry">Tekrar Dene</string>
+    
+    <!-- Loading -->
+    <string name="loading">Yükleniyor...</string>
+    <string name="analyzing">AI Analiz Yapıyor...</string>
+    
+    <!-- Notifications -->
+    <string name="notifications_title">BİLDİRİMLER</string>
+    <string name="view_all">Tümünü Gör</string>
+    
+    <!-- How it works -->
+    <string name="how_it_works">NASIL ÇALIŞIR?</string>
+    <string name="step1_title">Maçları Seç</string>
+    <string name="step1_desc">İlgilendiğin maçı listeden seç.</string>
+    <string name="step2_title">Tahmini Gör</string>
+    <string name="step2_desc">AI tahminini ve analizleri incele.</string>
+    <string name="step3_title">Sonuç Bekle</string>
+    <string name="step3_desc">Maç sonucu açıklandığında.</string>
+    <string name="step4_title">Performansı Gör</string>
+    <string name="step4_desc">Tahminlerin tutup tutmadığını geçmişten takip et.</string>
+    
+    <!-- Social -->
+    <string name="follow_us">BİZİ TAKİP EDİN</string>
+    
+    <!-- Performance Stats -->
+    <string name="total_predictions">Toplam Tahmin</string>
+    <string name="correct_predictions">Doğru Tahmin</string>
+    <string name="wrong_predictions">Yanlış Tahmin</string>
+    <string name="refund_rate">İade Oranı</string>
+    <string name="home_win_rate">Ev Sahibi</string>
+    <string name="draw_rate">Beraberlik</string>
+    <string name="away_win_rate">Deplasman</string>
+    <string name="over_rate">2.5 Üst</string>
+    
+    <!-- Time Filters -->
+    <string name="last_7_days">Son 7 Gün</string>
+    <string name="last_30_days">Son 30 Gün</string>
+    <string name="last_90_days">Son 90 Gün</string>
+    <string name="all_time">Tümü</string>
+</resources>

@@ -32,7 +32,6 @@ class HomeFragment : Fragment() {
         setupTabLayout()
         setupObservers()
         setupTopPredictions()
-        // Hide daily limit UI — no limits in personal mode
         binding.tvDailyLimit.visibility = View.GONE
         binding.progressDailyLimit.visibility = View.GONE
         viewModel.loadTodayMatches()
@@ -44,6 +43,8 @@ class HomeFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = matchAdapter
             isNestedScrollingEnabled = false
+            setHasFixedSize(false)
+            setItemViewCacheSize(20)
         }
     }
 

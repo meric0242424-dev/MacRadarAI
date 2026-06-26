@@ -6,7 +6,6 @@ import retrofit2.http.*
 
 interface FootballApiService {
 
-    // Get fixtures by date
     @GET("fixtures")
     suspend fun getFixturesByDate(
         @Query("date") date: String,
@@ -14,14 +13,12 @@ interface FootballApiService {
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<FixtureResponse>>
 
-    // Get live fixtures
     @GET("fixtures")
     suspend fun getLiveFixtures(
         @Query("live") live: String = "all",
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<FixtureResponse>>
 
-    // Get fixture by ID with details
     @GET("fixtures")
     suspend fun getFixtureById(
         @Query("id") id: Int,
@@ -29,35 +26,24 @@ interface FootballApiService {
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<FixtureResponse>>
 
-    // Get fixture statistics
     @GET("fixtures/statistics")
     suspend fun getFixtureStatistics(
         @Query("fixture") fixtureId: Int,
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<TeamStats>>
 
-    // Get fixture events
     @GET("fixtures/events")
     suspend fun getFixtureEvents(
         @Query("fixture") fixtureId: Int,
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<MatchEvent>>
 
-    // Get fixture lineups
     @GET("fixtures/lineups")
     suspend fun getFixtureLineups(
         @Query("fixture") fixtureId: Int,
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<Lineup>>
 
-    // Get fixture players stats
-    @GET("fixtures/players")
-    suspend fun getFixturePlayers(
-        @Query("fixture") fixtureId: Int,
-        @Header("x-rapidapi-key") apiKey: String
-    ): Response<ApiResponse<MatchPlayer>>
-
-    // Get team season statistics
     @GET("teams/statistics")
     suspend fun getTeamStatistics(
         @Query("team") teamId: Int,
@@ -66,23 +52,20 @@ interface FootballApiService {
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<TeamSeasonStats>>
 
-    // Get standings
     @GET("standings")
     suspend fun getStandings(
         @Query("league") leagueId: Int,
         @Query("season") season: Int,
         @Header("x-rapidapi-key") apiKey: String
-    ): Response<ApiResponse<StandingsResponse>>
+    ): Response<ApiResponse<StandingResponse>>
 
-    // Head to head
     @GET("fixtures/headtohead")
     suspend fun getHeadToHead(
-        @Query("h2h") h2h: String, // format: "teamId1-teamId2"
+        @Query("h2h") h2h: String,
         @Query("last") last: Int = 10,
         @Header("x-rapidapi-key") apiKey: String
     ): Response<ApiResponse<FixtureResponse>>
 
-    // Get predictions from API (if available)
     @GET("predictions")
     suspend fun getPredictions(
         @Query("fixture") fixtureId: Int,

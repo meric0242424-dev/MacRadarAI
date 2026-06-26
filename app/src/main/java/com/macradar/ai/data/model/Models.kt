@@ -252,12 +252,12 @@ data class PredictionModel(
     val riskLevel: String,
     val over25Probability: Int,
     val under25Probability: Int,
+    val over35Probability: Int,
+    val under35Probability: Int,
     val bttsYesProbability: Int,
     val bttsNoProbability: Int,
     val htGoalYesProbability: Int,
     val htGoalNoProbability: Int,
-    val predictedHomeScore: Int,
-    val predictedAwayScore: Int,
     val aiComment: String,
     val timestamp: Long = System.currentTimeMillis()
 )
@@ -271,24 +271,21 @@ data class SavedPrediction(
     val awayLogo: String,
     val leagueName: String,
     val matchDate: String,
-    val predictedWinner: String,   // "HOME", "DRAW", "AWAY"
+    val predictedWinner: String,
     val homeWinProb: Int,
     val drawProb: Int,
     val awayWinProb: Int,
-    val predictedHomeScore: Int,
-    val predictedAwayScore: Int,
     val confidenceScore: Int,
     val over25Prob: Int,
+    val over35Prob: Int = 0,
     val bttsYesProb: Int,
-    // Actual results (filled after match)
-    val actualHomeGoals: Int = -1,  // -1 = not finished yet
+    val actualHomeGoals: Int = -1,
     val actualAwayGoals: Int = -1,
-    val actualWinner: String = "",   // "HOME", "DRAW", "AWAY"
+    val actualWinner: String = "",
     val isResultChecked: Boolean = false,
-    // Outcome tracking
     val winnerCorrect: Boolean = false,
-    val scoreCorrect: Boolean = false,
     val over25Correct: Boolean = false,
+    val over35Correct: Boolean = false,
     val bttsCorrect: Boolean = false,
     val savedAt: Long = System.currentTimeMillis()
 )
@@ -308,13 +305,13 @@ data class TopPrediction(
 // Stats for the accuracy screen
 data class PredictionStats(
     val total: Int,
-    val checked: Int,      // how many results have been resolved
+    val checked: Int,
     val winnerCorrect: Int,
-    val scoreCorrect: Int,
     val over25Correct: Int,
+    val over35Correct: Int,
     val bttsCorrect: Int,
-    val winnerRate: Float,  // percentage
-    val scoreRate: Float,
+    val winnerRate: Float,
     val over25Rate: Float,
+    val over35Rate: Float,
     val bttsRate: Float
 )

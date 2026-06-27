@@ -26,13 +26,8 @@ class FootballRepository {
     suspend fun getTodayMatches(): Result<List<FixtureResponse>> = withContext(Dispatchers.IO) {
         try {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-            fixtureCache[today]?.let {
-                return@withContext Result.Success(it)
-            }
-
+            fixtureCache[today]?.let { return@withContext Result.Success(it) }
             val response = apiService.getFixturesByDate(today, "Europe/Istanbul", apiKey)
-
             if (response.isSuccessful) {
                 val fixtures = response.body()?.response ?: emptyList()
                 val sorted = sortFixturesByLeaguePriority(fixtures)
@@ -51,13 +46,8 @@ class FootballRepository {
             val cal = Calendar.getInstance()
             cal.add(Calendar.DAY_OF_YEAR, 1)
             val tomorrow = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.time)
-
-            fixtureCache[tomorrow]?.let {
-                return@withContext Result.Success(it)
-            }
-
+            fixtureCache[tomorrow]?.let { return@withContext Result.Success(it) }
             val response = apiService.getFixturesByDate(tomorrow, "Europe/Istanbul", apiKey)
-
             if (response.isSuccessful) {
                 val fixtures = response.body()?.response ?: emptyList()
                 val sorted = sortFixturesByLeaguePriority(fixtures)
@@ -190,7 +180,9 @@ class FootballRepository {
         homeTeamId: Int,
         awayTeamId: Int,
         leagueId: Int,
-        season: Int
+        season: Int,
+        homeTeamName: String = "",
+        awayTeamName: String = ""
     ): Result<PredictionModel> = withContext(Dispatchers.IO) {
         predictionCache[fixtureId]?.let {
             return@withContext Result.Success(it)
@@ -210,15 +202,16 @@ class FootballRepository {
             } catch (e: Exception) { null }
 
             val prediction = AIPredictionEngine.calculatePrediction(
-                homeStats, awayStats, h2h, homeTeamId, awayTeamId
+                homeStats, awayStats, h2h, homeTeamId, awayTeamId, homeTeamName, awayTeamName
             ).copy(matchId = fixtureId)
 
             predictionCache[fixtureId] = prediction
             Result.Success(prediction)
 
         } catch (e: Exception) {
-            val defaultPred = AIPredictionEngine.calculatePrediction(null, null, null, homeTeamId, awayTeamId)
-                .copy(matchId = fixtureId)
+            val defaultPred = AIPredictionEngine.calculatePrediction(
+                null, null, null, homeTeamId, awayTeamId, homeTeamName, awayTeamName
+            ).copy(matchId = fixtureId)
             Result.Success(defaultPred)
         }
     }

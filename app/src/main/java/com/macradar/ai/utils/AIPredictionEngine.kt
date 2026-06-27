@@ -5,16 +5,45 @@ import kotlin.math.*
 
 object AIPredictionEngine {
 
+    // Approximate relative strength (0-100) for well-known national teams,
+    // used only when no real statistics are available (e.g. World Cup fixtures
+    // on the free API plan). This prevents nonsensical results like a weak
+    // team being favored over a top team purely due to home-advantage + randomness.
+    private val knownTeamStrength: Map<String, Int> = mapOf(
+        "brazil" to 95, "argentina" to 94, "france" to 93, "england" to 91,
+        "spain" to 90, "portugal" to 88, "netherlands" to 87, "germany" to 87,
+        "belgium" to 85, "italy" to 84, "croatia" to 80, "uruguay" to 80,
+        "colombia" to 78, "morocco" to 77, "switzerland" to 75, "japan" to 74,
+        "usa" to 73, "united states" to 73, "mexico" to 72, "denmark" to 76,
+        "senegal" to 75, "south korea" to 72, "ghana" to 65, "tunisia" to 64,
+        "cameroon" to 64, "ecuador" to 70, "poland" to 70, "serbia" to 73,
+        "wales" to 68, "australia" to 65, "canada" to 65, "iran" to 62,
+        "saudi arabia" to 60, "costa rica" to 58, "panama" to 50, "qatar" to 48,
+        "jamaica" to 48, "new zealand" to 45, "honduras" to 45
+    )
+
+    private fun lookupTeamStrength(name: String): Int? {
+        val key = name.trim().lowercase()
+        return knownTeamStrength[key]
+    }
+
+    /**
+     * Calculate AI prediction based on team statistics, form, and historical data
+     */
     fun calculatePrediction(
         homeTeamStats: TeamSeasonStats?,
         awayTeamStats: TeamSeasonStats?,
         h2hMatches: List<FixtureResponse>?,
         homeTeamId: Int,
-        awayTeamId: Int
+        awayTeamId: Int,
+        homeTeamName: String = "",
+        awayTeamName: String = ""
     ): PredictionModel {
 
+        // Fallback prediction if no team stats available (common on free API plans
+        // for smaller leagues/seasons, e.g. national team / World Cup fixtures).
         if (homeTeamStats == null && awayTeamStats == null) {
-            return getFallbackPrediction(homeTeamId, awayTeamId)
+            return getFallbackPrediction(homeTeamId, awayTeamId, homeTeamName, awayTeamName)
         }
 
         val homeForm = calculateFormScore(homeTeamStats?.form?.takeLast(5) ?: "")
@@ -240,12 +269,28 @@ object AIPredictionEngine {
         }
     }
 
-    private fun getFallbackPrediction(homeTeamId: Int, awayTeamId: Int): PredictionModel {
+    private fun getFallbackPrediction(homeTeamId: Int, awayTeamId: Int, homeTeamName: String = "", awayTeamName: String = ""): PredictionModel {
         val seed = abs((homeTeamId * 31 + awayTeamId * 17))
         val rng = java.util.Random(seed.toLong())
 
-        val homeWinProb = 30 + rng.nextInt(26)
-        var awayWinProb = 20 + rng.nextInt(21)
+        val homeKnown = lookupTeamStrength(homeTeamName)
+        val awayKnown = lookupTeamStrength(awayTeamName)
+
+        val homeWinProb: Int
+        var awayWinProb: Int
+
+        if (homeKnown != null || awayKnown != null) {
+            val homeStrength = (homeKnown ?: 50) + 5
+            val awayStrength = awayKnown ?: 50
+            val total = homeStrength + awayStrength
+
+            homeWinProb = ((homeStrength.toDouble() / total) * 72).toInt().coerceIn(8, 85)
+            awayWinProb = ((awayStrength.toDouble() / total) * 72).toInt().coerceIn(8, 85)
+        } else {
+            homeWinProb = 30 + rng.nextInt(26)
+            awayWinProb = 20 + rng.nextInt(21)
+        }
+
         if (homeWinProb + awayWinProb >= 95) awayWinProb = 95 - homeWinProb
         val drawProb = (100 - homeWinProb - awayWinProb).coerceIn(10, 40)
 
@@ -260,7 +305,11 @@ object AIPredictionEngine {
         val htGoal = 45 + rng.nextInt(31)
 
         val maxProb = maxOf(adjHomeWin, adjDraw, adjAwayWin)
-        val confidence = (55 + rng.nextInt(21)).coerceIn(50, 80)
+        val confidence = if (homeKnown != null || awayKnown != null) {
+            (maxProb + 10).coerceIn(55, 90)
+        } else {
+            (55 + rng.nextInt(21)).coerceIn(50, 80)
+        }
 
         val riskLevel = when {
             confidence >= 70 -> "Düşük Risk"

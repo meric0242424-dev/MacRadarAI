@@ -9,6 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AlertDialog
+import com.macradar.ai.BuildConfig
 import com.macradar.ai.R
 import com.macradar.ai.data.cache.ApiCache
 import com.macradar.ai.data.repository.PredictionStorage
@@ -32,6 +33,13 @@ class ProfileFragment : Fragment() {
 
         loadStats(view)
         setupRows(view)
+        setupVersionInfo(view)
+    }
+
+    private fun setupVersionInfo(view: View) {
+        val versionName = BuildConfig.VERSION_NAME
+        view.findViewById<TextView>(R.id.tvAppVersion).text =
+            "Sürüm $versionName · Yapay Zeka Destekli Futbol Analiz"
     }
 
     private fun loadStats(view: View) {

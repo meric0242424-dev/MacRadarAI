@@ -85,6 +85,7 @@ class MatchDetailFragment : Fragment() {
                         binding.tvMatchScore.text = "${fixture.goals.home ?: 0} - ${fixture.goals.away ?: 0}  ${elapsed}'"
                         binding.tvMatchScore.setTextColor(ContextCompat.getColor(requireContext(), R.color.live_red))
                     } else {
+                        // FT
                         binding.tvMatchScore.text = "${fixture.goals.home ?: 0} - ${fixture.goals.away ?: 0}"
                         binding.tvMatchScore.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
                     }

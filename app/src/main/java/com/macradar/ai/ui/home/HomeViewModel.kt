@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = FootballRepository()
+    private val repository = FootballRepository(application)
 
     private val _matches = MutableLiveData<Result<List<FixtureResponse>>>()
     val matches: LiveData<Result<List<FixtureResponse>>> = _matches

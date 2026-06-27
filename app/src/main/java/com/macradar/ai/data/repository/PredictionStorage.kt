@@ -6,10 +6,6 @@ import com.google.gson.reflect.TypeToken
 import com.macradar.ai.data.model.SavedPrediction
 import com.macradar.ai.data.model.PredictionStats
 
-/**
- * Saves and loads predictions from SharedPreferences as JSON.
- * Tracks real match results vs AI predictions for accuracy measurement.
- */
 class PredictionStorage(context: Context) {
 
     private val prefs = context.getSharedPreferences("predictions_v1", Context.MODE_PRIVATE)
@@ -17,10 +13,8 @@ class PredictionStorage(context: Context) {
 
     fun savePrediction(pred: SavedPrediction) {
         val all = getAllPredictions().toMutableList()
-        // Remove existing entry for same fixture if any
         all.removeAll { it.fixtureId == pred.fixtureId }
-        all.add(0, pred) // newest first
-        // Keep max 200 entries
+        all.add(0, pred)
         val trimmed = if (all.size > 200) all.take(200) else all
         val json = gson.toJson(trimmed)
         prefs.edit().putString("all_predictions", json).apply()
@@ -40,17 +34,13 @@ class PredictionStorage(context: Context) {
         return getAllPredictions().find { it.fixtureId == fixtureId }
     }
 
-    /**
-     * Called when we fetch a finished match result.
-     * Updates the saved prediction with actual score and calculates correctness.
-     */
     fun updateWithActualResult(fixtureId: Int, homeGoals: Int, awayGoals: Int) {
         val all = getAllPredictions().toMutableList()
         val index = all.indexOfFirst { it.fixtureId == fixtureId }
         if (index == -1) return
 
         val pred = all[index]
-        if (pred.isResultChecked) return // already updated
+        if (pred.isResultChecked) return
 
         val actualWinner = when {
             homeGoals > awayGoals -> "HOME"
@@ -58,10 +48,13 @@ class PredictionStorage(context: Context) {
             else -> "DRAW"
         }
 
-        val actualOver25 = (homeGoals + awayGoals) > 2
+        val totalGoals = homeGoals + awayGoals
+        val actualOver25 = totalGoals > 2
+        val actualOver35 = totalGoals > 3
         val actualBtts = homeGoals > 0 && awayGoals > 0
 
         val predictedOver25 = pred.over25Prob > 50
+        val predictedOver35 = pred.over35Prob > 50
         val predictedBtts = pred.bttsYesProb > 50
 
         val updated = pred.copy(
@@ -70,8 +63,8 @@ class PredictionStorage(context: Context) {
             actualWinner = actualWinner,
             isResultChecked = true,
             winnerCorrect = pred.predictedWinner == actualWinner,
-            scoreCorrect = pred.predictedHomeScore == homeGoals && pred.predictedAwayScore == awayGoals,
             over25Correct = predictedOver25 == actualOver25,
+            over35Correct = predictedOver35 == actualOver35,
             bttsCorrect = predictedBtts == actualBtts
         )
 
@@ -88,20 +81,20 @@ class PredictionStorage(context: Context) {
         if (n == 0) return PredictionStats(all.size, 0, 0, 0, 0, 0, 0f, 0f, 0f, 0f)
 
         val winnerCorrect = checked.count { it.winnerCorrect }
-        val scoreCorrect = checked.count { it.scoreCorrect }
         val over25Correct = checked.count { it.over25Correct }
+        val over35Correct = checked.count { it.over35Correct }
         val bttsCorrect = checked.count { it.bttsCorrect }
 
         return PredictionStats(
             total = all.size,
             checked = n,
             winnerCorrect = winnerCorrect,
-            scoreCorrect = scoreCorrect,
             over25Correct = over25Correct,
+            over35Correct = over35Correct,
             bttsCorrect = bttsCorrect,
             winnerRate = winnerCorrect * 100f / n,
-            scoreRate = scoreCorrect * 100f / n,
             over25Rate = over25Correct * 100f / n,
+            over35Rate = over35Correct * 100f / n,
             bttsRate = bttsCorrect * 100f / n
         )
     }

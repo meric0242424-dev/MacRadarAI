@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class MatchDetailViewModel(application: Application, private val fixtureId: Int) : AndroidViewModel(application) {
 
-    private val repository = FootballRepository()
+    private val repository = FootballRepository(application)
     private val storage = PredictionStorage(application)
 
     private val _fixture = MutableLiveData<Result<FixtureResponse>>()

@@ -197,20 +197,6 @@ class FootballRepository {
         }
 
         try {
-            val apiPredResponse = apiService.getPredictions(fixtureId, apiKey)
-            if (apiPredResponse.isSuccessful) {
-                val apiPred = apiPredResponse.body()?.response?.firstOrNull()
-                if (apiPred != null) {
-                    val pred = convertApiPrediction(fixtureId, apiPred)
-                    predictionCache[fixtureId] = pred
-                    return@withContext Result.Success(pred)
-                }
-            }
-        } catch (e: Exception) {
-            // Fall through to AI engine
-        }
-
-        try {
             val homeStats = try {
                 (getTeamStatistics(homeTeamId, leagueId, season) as? Result.Success)?.data
             } catch (e: Exception) { null }
@@ -235,43 +221,6 @@ class FootballRepository {
                 .copy(matchId = fixtureId)
             Result.Success(defaultPred)
         }
-    }
-
-    private fun convertApiPrediction(fixtureId: Int, api: com.macradar.ai.data.api.ApiPredictionResponse): PredictionModel {
-        val homeProb = api.percent?.home?.replace("%", "")?.toIntOrNull() ?: 45
-        val drawProb = api.percent?.draw?.replace("%", "")?.toIntOrNull() ?: 28
-        val awayProb = api.percent?.away?.replace("%", "")?.toIntOrNull() ?: 27
-
-        val underOver = api.underOver ?: "2.5"
-        val isOver = underOver.contains("+") || !underOver.contains("-")
-        val over25 = if (isOver) 65 else 38
-
-        val maxProb = maxOf(homeProb, drawProb, awayProb)
-        val confidence = (maxProb + 15).coerceIn(50, 92)
-
-        val over35 = (over25 * 0.55).toInt().coerceIn(20, 55)
-
-        return PredictionModel(
-            matchId = fixtureId,
-            homeWinProbability = homeProb,
-            drawProbability = drawProb,
-            awayWinProbability = awayProb,
-            confidenceScore = confidence,
-            riskLevel = when {
-                confidence >= 75 -> "Düşük Risk"
-                confidence >= 60 -> "Orta Risk"
-                else -> "Yüksek Risk"
-            },
-            over25Probability = over25,
-            under25Probability = 100 - over25,
-            over35Probability = over35,
-            under35Probability = 100 - over35,
-            bttsYesProbability = 55,
-            bttsNoProbability = 45,
-            htGoalYesProbability = 62,
-            htGoalNoProbability = 38,
-            aiComment = api.advice ?: "AI analizi tamamlandı."
-        )
     }
 
     private fun sortFixturesByLeaguePriority(fixtures: List<FixtureResponse>): List<FixtureResponse> {

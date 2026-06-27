@@ -1,122 +1,206 @@
-package com.macradar.ai.ui.history
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import android.widget.TextView
-import android.widget.ImageView
-import android.widget.ProgressBar
-import androidx.cardview.widget.CardView
-import com.bumptech.glide.Glide
-import com.macradar.ai.R
-import com.macradar.ai.data.model.SavedPrediction
-import com.macradar.ai.data.repository.PredictionStorage
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-class HistoryFragment : Fragment() {
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tahmin Geçmişi"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
 
-    private lateinit var storage: PredictionStorage
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.fragment_history, container, false)
-    }
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        storage = PredictionStorage(requireContext())
-        setupStats(view)
-        setupList(view)
-    }
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📊 AI Başarı İstatistikleri"
+                    android:textColor="@color/accent_green"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/>
 
-    private fun setupStats(view: View) {
-        val stats = storage.getStats()
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
 
-        view.findViewById<TextView>(R.id.tvTotalPredictions).text = stats.total.toString()
-        view.findViewById<TextView>(R.id.tvCheckedPredictions).text = stats.checked.toString()
-        view.findViewById<TextView>(R.id.tvWinnerRate).text = if (stats.checked > 0) "%.0f%%".format(stats.winnerRate) else "-"
-        view.findViewById<TextView>(R.id.tvScoreRate).text = if (stats.checked > 0) "%.0f%%".format(stats.scoreRate) else "-"
-        view.findViewById<TextView>(R.id.tvOver25Rate).text = if (stats.checked > 0) "%.0f%%".format(stats.over25Rate) else "-"
-        view.findViewById<TextView>(R.id.tvBttsRate).text = if (stats.checked > 0) "%.0f%%".format(stats.bttsRate) else "-"
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView
+                            android:id="@+id/tvTotalPredictions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="@color/text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Toplam"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
 
-        val winnerProgress = view.findViewById<ProgressBar>(R.id.progressWinnerRate)
-        winnerProgress.max = 100
-        winnerProgress.progress = stats.winnerRate.toInt()
-    }
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="40dp"
+                        android:background="@color/divider_color"/>
 
-    private fun setupList(view: View) {
-        val rv = view.findViewById<RecyclerView>(R.id.rvHistory)
-        val predictions = storage.getAllPredictions()
-        rv.layoutManager = LinearLayoutManager(requireContext())
-        rv.adapter = HistoryAdapter(predictions)
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView
+                            android:id="@+id/tvCheckedPredictions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="@color/text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sonuçlanan"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
 
-        val tvEmpty = view.findViewById<TextView>(R.id.tvEmptyHistory)
-        if (predictions.isEmpty()) {
-            tvEmpty.visibility = View.VISIBLE
-            rv.visibility = View.GONE
-        } else {
-            tvEmpty.visibility = View.GONE
-            rv.visibility = View.VISIBLE
-        }
-    }
-}
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="40dp"
+                        android:background="@color/divider_color"/>
 
-class HistoryAdapter(private val items: List<SavedPrediction>) : RecyclerView.Adapter<HistoryAdapter.VH>() {
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView
+                            android:id="@+id/tvWinnerRate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="-"
+                            android:textColor="@color/accent_green"
+                            android:textSize="28sp"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Kazanan %"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
+                </LinearLayout>
 
-    class VH(view: View) : RecyclerView.ViewHolder(view) {
-        val ivHome: ImageView = view.findViewById(R.id.ivHistoryHome)
-        val ivAway: ImageView = view.findViewById(R.id.ivHistoryAway)
-        val tvMatch: TextView = view.findViewById(R.id.tvHistoryMatch)
-        val tvLeague: TextView = view.findViewById(R.id.tvHistoryLeague)
-        val tvPrediction: TextView = view.findViewById(R.id.tvHistoryPrediction)
-        val tvResult: TextView = view.findViewById(R.id.tvHistoryResult)
-        val tvDate: TextView = view.findViewById(R.id.tvHistoryDate)
-        val tvOutcome: TextView = view.findViewById(R.id.tvHistoryOutcome)
-        val tvConfidence: TextView = view.findViewById(R.id.tvHistoryConfidence)
-    }
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kazanan Tahmini Doğruluğu"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="4dp"/>
+                <ProgressBar
+                    android:id="@+id/progressWinnerRate"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="@color/accent_green"
+                    android:layout_marginBottom="12dp"/>
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_history, parent, false)
-        return VH(view)
-    }
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-    override fun getItemCount() = items.size
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:id="@+id/tvScoreRate"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="-" android:textColor="@color/text_primary"
+                            android:textSize="18sp" android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="3.5 Üst" android:textColor="@color/text_secondary" android:textSize="11sp"/>
+                    </LinearLayout>
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val item = items[position]
-        val ctx = holder.itemView.context
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:id="@+id/tvOver25Rate"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="-" android:textColor="@color/text_primary"
+                            android:textSize="18sp" android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="2.5 Üst" android:textColor="@color/text_secondary" android:textSize="11sp"/>
+                    </LinearLayout>
 
-        Glide.with(ctx).load(item.homeLogo).placeholder(R.drawable.ic_team_placeholder).into(holder.ivHome)
-        Glide.with(ctx).load(item.awayLogo).placeholder(R.drawable.ic_team_placeholder).into(holder.ivAway)
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:id="@+id/tvBttsRate"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="-" android:textColor="@color/text_primary"
+                            android:textSize="18sp" android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="KG Var" android:textColor="@color/text_secondary" android:textSize="11sp"/>
+                    </LinearLayout>
 
-        holder.tvMatch.text = "${item.homeTeam} vs ${item.awayTeam}"
-        holder.tvLeague.text = item.leagueName
-        holder.tvDate.text = item.matchDate
-        holder.tvConfidence.text = "AI: ${item.confidenceScore}"
+                </LinearLayout>
 
-        val winnerLabel = when (item.predictedWinner) {
-            "HOME" -> item.homeTeam
-            "AWAY" -> item.awayTeam
-            else -> "Beraberlik"
-        }
-        holder.tvPrediction.text = "Tahmin: $winnerLabel (${item.predictedHomeScore}-${item.predictedAwayScore})"
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-        if (item.isResultChecked) {
-            holder.tvResult.text = "Sonuç: ${item.actualHomeGoals} - ${item.actualAwayGoals}"
-            holder.tvResult.visibility = View.VISIBLE
-            if (item.winnerCorrect) {
-                holder.tvOutcome.text = "✓ DOĞRU"
-                holder.tvOutcome.setTextColor(ctx.getColor(R.color.accent_green))
-            } else {
-                holder.tvOutcome.text = "✗ YANLIŞ"
-                holder.tvOutcome.setTextColor(ctx.getColor(R.color.live_red))
-            }
-        } else {
-            holder.tvResult.visibility = View.GONE
-            holder.tvOutcome.text = "⏳ Bekleniyor"
-            holder.tvOutcome.setTextColor(ctx.getColor(R.color.text_secondary))
-        }
-    }
-}
+        <TextView
+            android:id="@+id/tvEmptyHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Henüz tahmin yapılmamış.\nBir maç detayına giderek tahmin oluşturun."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginTop="32dp"
+            android:visibility="gone"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"/>
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

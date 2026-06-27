@@ -228,7 +228,6 @@
                             android:orientation="vertical"
                             android:padding="16dp">
 
-                            <!-- Confidence Score -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
@@ -328,7 +327,6 @@
                             <View android:layout_width="match_parent" android:layout_height="1dp"
                                 android:background="@color/divider_color" android:layout_marginVertical="16dp" />
 
-                            <!-- Goal Predictions -->
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                                 android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
                                 <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="2.5 Üst"
@@ -349,6 +347,28 @@
                                     android:progressTint="@color/accent_blue" android:indeterminate="false" />
                                 <TextView android:id="@+id/tvUnder25Percent" android:layout_width="45dp" android:layout_height="wrap_content"
                                     android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%36" />
+                            </LinearLayout>
+
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="3.5 Üst"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressOver35" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_green" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvOver35Percent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%35" />
+                            </LinearLayout>
+
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                                <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="3.5 Alt"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" />
+                                <ProgressBar android:id="@+id/progressUnder35" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                    android:layout_width="0dp" android:layout_height="6dp" android:layout_weight="1"
+                                    android:progressTint="@color/accent_blue" android:indeterminate="false" />
+                                <TextView android:id="@+id/tvUnder35Percent" android:layout_width="45dp" android:layout_height="wrap_content"
+                                    android:textColor="@color/text_primary" android:textSize="13sp" android:textStyle="bold" android:gravity="end" tools:text="%65" />
                             </LinearLayout>
 
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -401,20 +421,30 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="TAHMİN SKORU"
+                                android:text="AI TAHMİNİ - KAZANAN TARAF"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp"
                                 android:layout_marginBottom="8dp" />
 
                             <TextView
-                                android:id="@+id/tvPredictedScore"
-                                android:layout_width="wrap_content"
+                                android:id="@+id/tvPredictedWinner"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/accent_green"
-                                android:textSize="40sp"
+                                android:textSize="22sp"
                                 android:textStyle="bold"
+                                android:gravity="center"
+                                tools:text="Galatasaray Kazanır" />
+
+                            <TextView
+                                android:id="@+id/tvPredictedWinnerProb"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:layout_gravity="center_horizontal"
-                                tools:text="2 - 1" />
+                                android:layout_marginTop="6dp"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp"
+                                tools:text="%47 olasılıkla" />
 
                         </LinearLayout>
 

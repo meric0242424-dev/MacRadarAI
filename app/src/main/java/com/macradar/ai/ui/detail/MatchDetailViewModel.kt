@@ -63,7 +63,9 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
                     homeTeamId = fixture.teams.home.id,
                     awayTeamId = fixture.teams.away.id,
                     leagueId = fixture.league.id,
-                    season = fixture.league.season
+                    season = fixture.league.season,
+                    homeTeamName = fixture.teams.home.name,
+                    awayTeamName = fixture.teams.away.name
                 )
                 if (result is Result.Success) {
                     savePredictionToHistory(fixture, result.data)

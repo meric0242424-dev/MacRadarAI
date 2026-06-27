@@ -249,6 +249,8 @@ class FootballRepository {
         val maxProb = maxOf(homeProb, drawProb, awayProb)
         val confidence = (maxProb + 15).coerceIn(50, 92)
 
+        val over35 = (over25 * 0.55).toInt().coerceIn(20, 55)
+
         return PredictionModel(
             matchId = fixtureId,
             homeWinProbability = homeProb,
@@ -262,12 +264,12 @@ class FootballRepository {
             },
             over25Probability = over25,
             under25Probability = 100 - over25,
+            over35Probability = over35,
+            under35Probability = 100 - over35,
             bttsYesProbability = 55,
             bttsNoProbability = 45,
             htGoalYesProbability = 62,
             htGoalNoProbability = 38,
-            predictedHomeScore = api.goals?.home?.toDoubleOrNull()?.toInt() ?: 1,
-            predictedAwayScore = api.goals?.away?.toDoubleOrNull()?.toInt() ?: 1,
             aiComment = api.advice ?: "AI analizi tamamlandı."
         )
     }

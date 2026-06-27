@@ -3,23 +3,56 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_dark"
-    android:gravity="center"
     android:orientation="vertical">
 
-    <TextView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎯 AI Radar"
+            android:textColor="@color/accent_green"
+            android:textSize="22sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Bugünün en yüksek güven skorlu tahminleri"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"/>
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressRadar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="AI Radar"
-        android:textColor="@color/accent_green"
-        android:textSize="24sp"
-        android:textStyle="bold"/>
+        android:layout_gravity="center"
+        android:layout_marginTop="40dp"
+        android:visibility="gone"/>
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tvEmptyRadar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Günün En Güçlü Tahminleri"
+        android:layout_marginTop="40dp"
+        android:gravity="center"
+        android:text="Şu an için radar maçı bulunamadı."
         android:textColor="@color/text_secondary"
-        android:textSize="14sp"/>
+        android:textSize="14sp"
+        android:visibility="gone"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvRadarMatches"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="16dp"
+        android:clipToPadding="false"/>
 
 </LinearLayout>

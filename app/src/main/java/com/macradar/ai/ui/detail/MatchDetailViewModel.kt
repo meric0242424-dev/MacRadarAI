@@ -40,7 +40,6 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
             val result = repository.getMatchDetail(fixtureId)
             if (result is Result.Success) {
                 currentFixture = result.data
-                // If match is finished, update stored prediction result
                 val status = result.data.fixture.status.short
                 if (status == "FT" || status == "AET" || status == "PEN") {
                     val hg = result.data.goals.home ?: 0
@@ -67,7 +66,6 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
                     season = fixture.league.season
                 )
                 if (result is Result.Success) {
-                    // Auto-save prediction for history tracking
                     savePredictionToHistory(fixture, result.data)
                 }
                 _prediction.value = result
@@ -78,7 +76,6 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
     }
 
     private fun savePredictionToHistory(fixture: FixtureResponse, pred: PredictionModel) {
-        // Only save if match hasn't started yet (NS = Not Started)
         val status = fixture.fixture.status.short
         val maxProb = maxOf(pred.homeWinProbability, pred.drawProbability, pred.awayWinProbability)
         val predictedWinner = when (maxProb) {
@@ -99,14 +96,12 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
             homeWinProb = pred.homeWinProbability,
             drawProb = pred.drawProbability,
             awayWinProb = pred.awayWinProbability,
-            predictedHomeScore = pred.predictedHomeScore,
-            predictedAwayScore = pred.predictedAwayScore,
             confidenceScore = pred.confidenceScore,
             over25Prob = pred.over25Probability,
+            over35Prob = pred.over35Probability,
             bttsYesProb = pred.bttsYesProbability
         )
 
-        // If match is already finished, fill in actual result
         if (status == "FT" || status == "AET") {
             val hg = fixture.goals.home ?: 0
             val ag = fixture.goals.away ?: 0
@@ -115,14 +110,15 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
                 ag > hg -> "AWAY"
                 else -> "DRAW"
             }
+            val totalGoals = hg + ag
             storage.savePrediction(saved.copy(
                 actualHomeGoals = hg,
                 actualAwayGoals = ag,
                 actualWinner = actualWinner,
                 isResultChecked = true,
                 winnerCorrect = predictedWinner == actualWinner,
-                scoreCorrect = pred.predictedHomeScore == hg && pred.predictedAwayScore == ag,
-                over25Correct = (pred.over25Probability > 50) == ((hg + ag) > 2),
+                over25Correct = (pred.over25Probability > 50) == (totalGoals > 2),
+                over35Correct = (pred.over35Probability > 50) == (totalGoals > 3),
                 bttsCorrect = (pred.bttsYesProbability > 50) == (hg > 0 && ag > 0)
             ))
         } else {

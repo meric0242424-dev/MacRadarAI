@@ -272,11 +272,20 @@
                     android:textSize="14sp"
                     android:textStyle="bold"/>
 
-                <TextView
+               <TextView
+                    android:id="@+id/tvAppVersion"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="Sürüm 1.0 · Yapay Zeka Destekli Futbol Analiz"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Geliştirici: DM Group"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"/>
 

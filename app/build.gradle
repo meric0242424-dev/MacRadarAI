@@ -18,7 +18,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // !! BURAYA KENDİ API KEY'İNİ GİR !!
-        buildConfigField "String", "FOOTBALL_API_KEY", "\"d83ba0bcae81fb8d66ecfd012409b928\""
+        buildConfigField "String", "FOOTBALL_API_KEY", "\"2d8f683d7ba6f29b16e34cfe027afaef\""
         buildConfigField "String", "FOOTBALL_API_BASE_URL", "\"https://v3.football.api-sports.io/\""
     }
 

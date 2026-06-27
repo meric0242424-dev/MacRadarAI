@@ -85,7 +85,6 @@ class MatchDetailFragment : Fragment() {
                         binding.tvMatchScore.text = "${fixture.goals.home ?: 0} - ${fixture.goals.away ?: 0}  ${elapsed}'"
                         binding.tvMatchScore.setTextColor(ContextCompat.getColor(requireContext(), R.color.live_red))
                     } else {
-                        // FT
                         binding.tvMatchScore.text = "${fixture.goals.home ?: 0} - ${fixture.goals.away ?: 0}"
                         binding.tvMatchScore.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
                     }
@@ -108,6 +107,82 @@ class MatchDetailFragment : Fragment() {
                 is Result.Error -> binding.progressPrediction.visibility = View.GONE
             }
         }
+
+        viewModel.statistics.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Result.Loading -> showStatsMessage("İstatistikler yükleniyor...")
+                is Result.Success -> displayStatistics(result.data)
+                is Result.Error -> showStatsMessage("İstatistikler şu an için kullanılamıyor.")
+            }
+        }
+    }
+
+    private fun showStatsMessage(message: String) {
+        binding.layoutStats.removeAllViews()
+        val tv = android.widget.TextView(requireContext()).apply {
+            text = message
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+            textSize = 14f
+        }
+        binding.layoutStats.addView(tv)
+    }
+
+    private fun displayStatistics(stats: List<com.macradar.ai.data.model.TeamStats>) {
+        binding.layoutStats.removeAllViews()
+
+        if (stats.size < 2) {
+            showStatsMessage("Bu maç için henüz istatistik bulunmuyor.\nMaç başladığında canlı istatistikler burada görünecek.")
+            return
+        }
+
+        val homeStats = stats[0]
+        val awayStats = stats[1]
+
+        val homeTitle = android.widget.TextView(requireContext()).apply {
+            text = "${homeStats.team.name}  vs  ${awayStats.team.name}"
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+            textSize = 15f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp(16))
+        }
+        binding.layoutStats.addView(homeTitle)
+
+        val homeMap = homeStats.statistics.associateBy { it.type }
+        val awayMap = awayStats.statistics.associateBy { it.type }
+        val allTypes = (homeMap.keys + awayMap.keys).distinct()
+
+        for (type in allTypes) {
+            val homeVal = homeMap[type]?.value?.toString() ?: "0"
+            val awayVal = awayMap[type]?.value?.toString() ?: "0"
+            binding.layoutStats.addView(buildStatRow(type, homeVal, awayVal))
+        }
+    }
+
+    private fun buildStatRow(label: String, homeVal: String, awayVal: String): View {
+        val row = android.widget.LinearLayout(requireContext()).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            setPadding(0, dp(6), 0, dp(6))
+        }
+
+        fun cell(text: String, weight: Float, bold: Boolean): android.widget.TextView {
+            return android.widget.TextView(requireContext()).apply {
+                this.text = text
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                textSize = 13f
+                gravity = if (weight == 1f) android.view.Gravity.CENTER else android.view.Gravity.START
+                if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, weight)
+            }
+        }
+
+        row.addView(cell(homeVal, 1f, true))
+        row.addView(cell(label, 2f, false))
+        row.addView(cell(awayVal, 1f, true))
+        return row
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
     }
 
     private fun displayPrediction(pred: PredictionModel) {

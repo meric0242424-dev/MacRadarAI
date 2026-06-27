@@ -1,343 +1,262 @@
-package com.macradar.ai.utils
+package com.macradar.ai.data.repository
 
+import com.macradar.ai.data.api.ApiClient
+import com.macradar.ai.data.api.FootballApiService
 import com.macradar.ai.data.model.*
-import kotlin.math.*
+import com.macradar.ai.utils.AIPredictionEngine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
 
-object AIPredictionEngine {
+sealed class Result<out T> {
+    data class Success<T>(val data: T) : Result<T>()
+    data class Error(val message: String, val code: Int? = null) : Result<Nothing>()
+    object Loading : Result<Nothing>()
+}
 
-    // Approximate relative strength (0-100) for well-known national teams,
-    // used only when no real statistics are available (e.g. World Cup fixtures
-    // on the free API plan). This prevents nonsensical results like a weak
-    // team being favored over a top team purely due to home-advantage + randomness.
-    private val knownTeamStrength: Map<String, Int> = mapOf(
-        "brazil" to 95, "argentina" to 94, "france" to 93, "england" to 91,
-        "spain" to 90, "portugal" to 88, "netherlands" to 87, "germany" to 87,
-        "belgium" to 85, "italy" to 84, "croatia" to 80, "uruguay" to 80,
-        "colombia" to 78, "morocco" to 77, "switzerland" to 75, "japan" to 74,
-        "usa" to 73, "united states" to 73, "mexico" to 72, "denmark" to 76,
-        "senegal" to 75, "south korea" to 72, "ghana" to 65, "tunisia" to 64,
-        "cameroon" to 64, "ecuador" to 70, "poland" to 70, "serbia" to 73,
-        "wales" to 68, "australia" to 65, "canada" to 65, "iran" to 62,
-        "saudi arabia" to 60, "costa rica" to 58, "panama" to 50, "qatar" to 48,
-        "jamaica" to 48, "new zealand" to 45, "honduras" to 45
-    )
+class FootballRepository {
 
-    private fun lookupTeamStrength(name: String): Int? {
-        val key = name.trim().lowercase()
-        return knownTeamStrength[key]
+    private val apiService: FootballApiService = ApiClient.footballApiService
+    private val apiKey: String = ApiClient.API_KEY
+
+    private val fixtureCache = mutableMapOf<String, List<FixtureResponse>>()
+    private val predictionCache = mutableMapOf<Int, PredictionModel>()
+
+    suspend fun getTodayMatches(): Result<List<FixtureResponse>> = withContext(Dispatchers.IO) {
+        try {
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+            fixtureCache[today]?.let {
+                return@withContext Result.Success(it)
+            }
+
+            val response = apiService.getFixturesByDate(today, "Europe/Istanbul", apiKey)
+
+            if (response.isSuccessful) {
+                val fixtures = response.body()?.response ?: emptyList()
+                val sorted = sortFixturesByLeaguePriority(fixtures)
+                fixtureCache[today] = sorted
+                Result.Success(sorted)
+            } else {
+                Result.Error("API Hatası: ${response.code()}", response.code())
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Bağlantı hatası")
+        }
     }
 
-    /**
-     * Calculate AI prediction based on team statistics, form, and historical data
-     */
-    fun calculatePrediction(
-        homeTeamStats: TeamSeasonStats?,
-        awayTeamStats: TeamSeasonStats?,
-        h2hMatches: List<FixtureResponse>?,
+    suspend fun getTomorrowMatches(): Result<List<FixtureResponse>> = withContext(Dispatchers.IO) {
+        try {
+            val cal = Calendar.getInstance()
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+            val tomorrow = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.time)
+
+            fixtureCache[tomorrow]?.let {
+                return@withContext Result.Success(it)
+            }
+
+            val response = apiService.getFixturesByDate(tomorrow, "Europe/Istanbul", apiKey)
+
+            if (response.isSuccessful) {
+                val fixtures = response.body()?.response ?: emptyList()
+                val sorted = sortFixturesByLeaguePriority(fixtures)
+                fixtureCache[tomorrow] = sorted
+                Result.Success(sorted)
+            } else {
+                Result.Error("API Hatası: ${response.code()}", response.code())
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Bağlantı hatası")
+        }
+    }
+
+    suspend fun getLiveMatches(): Result<List<FixtureResponse>> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getLiveFixtures(apiKey = apiKey)
+            if (response.isSuccessful) {
+                Result.Success(response.body()?.response ?: emptyList())
+            } else {
+                Result.Error("API Hatası: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Bağlantı hatası")
+        }
+    }
+
+    suspend fun getMatchDetail(fixtureId: Int): Result<FixtureResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getFixtureById(fixtureId, apiKey = apiKey)
+            if (response.isSuccessful) {
+                val fixture = response.body()?.response?.firstOrNull()
+                    ?: return@withContext Result.Error("Maç bulunamadı")
+                Result.Success(fixture)
+            } else {
+                Result.Error("API Hatası: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Bağlantı hatası")
+        }
+    }
+
+    suspend fun getMatchStatistics(fixtureId: Int): Result<List<TeamStats>> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getFixtureStatistics(fixtureId, apiKey)
+            if (response.isSuccessful) {
+                Result.Success(response.body()?.response ?: emptyList())
+            } else {
+                Result.Error("İstatistikler yüklenemedi")
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Bağlantı hatası")
+        }
+    }
+
+    suspend fun getMatchLineups(fixtureId: Int): Result<List<Lineup>> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getFixtureLineups(fixtureId, apiKey)
+            if (response.isSuccessful) {
+                Result.Success(response.body()?.response ?: emptyList())
+            } else {
+                Result.Error("Kadrolar yüklenemedi")
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Bağlantı hatası")
+        }
+    }
+
+    suspend fun getMatchEvents(fixtureId: Int): Result<List<MatchEvent>> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getFixtureEvents(fixtureId, apiKey)
+            if (response.isSuccessful) {
+                Result.Success(response.body()?.response ?: emptyList())
+            } else {
+                Result.Error("Olaylar yüklenemedi")
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Bağlantı hatası")
+        }
+    }
+
+    suspend fun getTeamStatistics(teamId: Int, leagueId: Int, season: Int): Result<TeamSeasonStats> =
+        withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getTeamStatistics(teamId, season, leagueId, apiKey)
+                if (response.isSuccessful) {
+                    val stats = response.body()?.response?.firstOrNull()
+                        ?: return@withContext Result.Error("İstatistikler bulunamadı")
+                    Result.Success(stats)
+                } else {
+                    Result.Error("Takım istatistikleri yüklenemedi")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Bağlantı hatası")
+            }
+        }
+
+    suspend fun getStandings(leagueId: Int, season: Int): Result<List<StandingItem>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getStandings(leagueId, season, apiKey)
+                if (response.isSuccessful) {
+                    val standingResponse: StandingResponse? = response.body()?.response?.firstOrNull()
+                    val standings: List<StandingItem> = standingResponse?.league?.standings?.firstOrNull() ?: emptyList()
+                    Result.Success(standings)
+                } else {
+                    Result.Error("Puan durumu yüklenemedi")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Bağlantı hatası")
+            }
+        }
+
+    suspend fun getHeadToHead(homeTeamId: Int, awayTeamId: Int): Result<List<FixtureResponse>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val h2hQuery = "$homeTeamId-$awayTeamId"
+                val response = apiService.getHeadToHead(h2hQuery, 10, apiKey)
+                if (response.isSuccessful) {
+                    Result.Success(response.body()?.response ?: emptyList())
+                } else {
+                    Result.Error("H2H verisi yüklenemedi")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Bağlantı hatası")
+            }
+        }
+
+    suspend fun generatePrediction(
+        fixtureId: Int,
         homeTeamId: Int,
         awayTeamId: Int,
+        leagueId: Int,
+        season: Int,
         homeTeamName: String = "",
         awayTeamName: String = ""
-    ): PredictionModel {
-
-        // Fallback prediction if no team stats available (common on free API plans
-        // for smaller leagues/seasons, e.g. national team / World Cup fixtures).
-        if (homeTeamStats == null && awayTeamStats == null) {
-            return getFallbackPrediction(homeTeamId, awayTeamId, homeTeamName, awayTeamName)
+    ): Result<PredictionModel> = withContext(Dispatchers.IO) {
+        predictionCache[fixtureId]?.let {
+            return@withContext Result.Success(it)
         }
 
-        val homeForm = calculateFormScore(homeTeamStats?.form?.takeLast(5) ?: "")
-        val awayForm = calculateFormScore(awayTeamStats?.form?.takeLast(5) ?: "")
+        try {
+            val homeStats = try {
+                (getTeamStatistics(homeTeamId, leagueId, season) as? Result.Success)?.data
+            } catch (e: Exception) { null }
 
-        val homeAttack = calculateAttackStrength(homeTeamStats, true)
-        val awayAttack = calculateAttackStrength(awayTeamStats, false)
+            val awayStats = try {
+                (getTeamStatistics(awayTeamId, leagueId, season) as? Result.Success)?.data
+            } catch (e: Exception) { null }
 
-        val homeDefense = calculateDefenseStrength(homeTeamStats, true)
-        val awayDefense = calculateDefenseStrength(awayTeamStats, false)
+            val h2h = try {
+                (getHeadToHead(homeTeamId, awayTeamId) as? Result.Success)?.data
+            } catch (e: Exception) { null }
 
-        val homeAdvantage = 1.15
+            val prediction = AIPredictionEngine.calculatePrediction(
+                homeStats, awayStats, h2h, homeTeamId, awayTeamId, homeTeamName, awayTeamName
+            ).copy(matchId = fixtureId)
 
-        val homeStrength = (homeForm * 0.3 + homeAttack * 0.35 + homeDefense * 0.35) * homeAdvantage
-        val awayStrength = awayForm * 0.3 + awayAttack * 0.35 + awayDefense * 0.35
+            predictionCache[fixtureId] = prediction
+            Result.Success(prediction)
 
-        val h2hFactor = calculateH2HFactor(h2hMatches, homeTeamId)
-
-        val adjustedHomeStrength = homeStrength * (1 + h2hFactor * 0.1)
-        val adjustedAwayStrength = awayStrength * (1 - h2hFactor * 0.1)
-
-        val totalStrength = adjustedHomeStrength + adjustedAwayStrength + 0.5
-
-        var homeWinProb = ((adjustedHomeStrength / totalStrength) * 100).toInt()
-        var awayWinProb = ((adjustedAwayStrength / totalStrength) * 100).toInt()
-        var drawProb = 100 - homeWinProb - awayWinProb
-
-        val sum = homeWinProb + drawProb + awayWinProb
-        if (sum != 100) {
-            drawProb += (100 - sum)
-        }
-
-        homeWinProb = homeWinProb.coerceIn(5, 85)
-        awayWinProb = awayWinProb.coerceIn(5, 85)
-        drawProb = (100 - homeWinProb - awayWinProb).coerceIn(5, 40)
-
-        val total = homeWinProb + drawProb + awayWinProb
-        if (total != 100) {
-            homeWinProb = (homeWinProb * 100.0 / total).toInt()
-            awayWinProb = (awayWinProb * 100.0 / total).toInt()
-            drawProb = 100 - homeWinProb - awayWinProb
-        }
-
-        val homeAvgGoals = homeTeamStats?.goals?.goalsFor?.average?.home?.toDoubleOrNull() ?: 1.5
-        val awayAvgGoals = awayTeamStats?.goals?.goalsFor?.average?.away?.toDoubleOrNull() ?: 1.2
-        val homeAvgConceded = homeTeamStats?.goals?.against?.average?.home?.toDoubleOrNull() ?: 1.3
-        val awayAvgConceded = awayTeamStats?.goals?.against?.average?.away?.toDoubleOrNull() ?: 1.6
-
-        val expectedHomeGoals = (homeAvgGoals + awayAvgConceded) / 2
-        val expectedAwayGoals = (awayAvgGoals + homeAvgConceded) / 2
-        val expectedTotalGoals = expectedHomeGoals + expectedAwayGoals
-
-        val over25Prob = calculateOver25Probability(expectedTotalGoals)
-        val under25Prob = 100 - over25Prob
-
-        val bttsProb = calculateBTTSProbability(expectedHomeGoals, expectedAwayGoals)
-        val bttsNoProb = 100 - bttsProb
-
-        val htGoalProb = calculateHTGoalProbability(expectedTotalGoals)
-        val htNoGoalProb = 100 - htGoalProb
-
-        val maxProb = maxOf(homeWinProb, drawProb, awayWinProb)
-        val confidenceScore = calculateConfidenceScore(maxProb, homeTeamStats, awayTeamStats)
-
-        val riskLevel = when {
-            confidenceScore >= 75 -> "Düşük Risk"
-            confidenceScore >= 55 -> "Orta Risk"
-            else -> "Yüksek Risk"
-        }
-
-        val aiComment = generateAIComment(
-            homeTeamStats, awayTeamStats, homeWinProb, awayWinProb,
-            confidenceScore, expectedTotalGoals
-        )
-
-        val over35Prob = calculateOver35Probability(expectedTotalGoals)
-
-        return PredictionModel(
-            matchId = 0,
-            homeWinProbability = homeWinProb,
-            drawProbability = drawProb,
-            awayWinProbability = awayWinProb,
-            confidenceScore = confidenceScore,
-            riskLevel = riskLevel,
-            over25Probability = over25Prob,
-            under25Probability = under25Prob,
-            over35Probability = over35Prob,
-            under35Probability = 100 - over35Prob,
-            bttsYesProbability = bttsProb,
-            bttsNoProbability = bttsNoProb,
-            htGoalYesProbability = htGoalProb,
-            htGoalNoProbability = htNoGoalProb,
-            aiComment = aiComment
-        )
-    }
-
-    private fun calculateFormScore(form: String): Double {
-        if (form.isEmpty()) return 50.0
-        var score = 0.0
-        var weight = 1.0
-        form.reversed().forEach { result ->
-            when (result) {
-                'W' -> score += 3.0 * weight
-                'D' -> score += 1.0 * weight
-                'L' -> score += 0.0
-            }
-            weight *= 0.9
-        }
-        return (score / (form.length * 3.0 * weight)) * 100
-    }
-
-    private fun calculateAttackStrength(stats: TeamSeasonStats?, isHome: Boolean): Double {
-        if (stats == null) return 50.0
-        val avgGoals = if (isHome) {
-            stats.goals.goalsFor.average.home.toDoubleOrNull() ?: 1.3
-        } else {
-            stats.goals.goalsFor.average.away.toDoubleOrNull() ?: 1.1
-        }
-        return (avgGoals / 2.0 * 100).coerceIn(20.0, 90.0)
-    }
-
-    private fun calculateDefenseStrength(stats: TeamSeasonStats?, isHome: Boolean): Double {
-        if (stats == null) return 50.0
-        val avgConceded = if (isHome) {
-            stats.goals.against.average.home.toDoubleOrNull() ?: 1.2
-        } else {
-            stats.goals.against.average.away.toDoubleOrNull() ?: 1.5
-        }
-        return (100 - (avgConceded / 3.0 * 100)).coerceIn(20.0, 90.0)
-    }
-
-    private fun calculateH2HFactor(h2hMatches: List<FixtureResponse>?, homeTeamId: Int): Double {
-        if (h2hMatches.isNullOrEmpty()) return 0.0
-        var homeWins = 0
-        var awayWins = 0
-        h2hMatches.takeLast(6).forEach { match ->
-            when {
-                match.teams.home.id == homeTeamId && match.teams.home.winner == true -> homeWins++
-                match.teams.away.id == homeTeamId && match.teams.away.winner == true -> homeWins++
-                else -> awayWins++
-            }
-        }
-        return ((homeWins - awayWins).toDouble() / maxOf(h2hMatches.size, 1))
-    }
-
-    private fun calculateOver25Probability(expectedGoals: Double): Int {
-        return when {
-            expectedGoals >= 3.5 -> 78
-            expectedGoals >= 3.0 -> 70
-            expectedGoals >= 2.5 -> 62
-            expectedGoals >= 2.0 -> 50
-            expectedGoals >= 1.5 -> 38
-            else -> 28
+        } catch (e: Exception) {
+            val defaultPred = AIPredictionEngine.calculatePrediction(
+                null, null, null, homeTeamId, awayTeamId, homeTeamName, awayTeamName
+            ).copy(matchId = fixtureId)
+            Result.Success(defaultPred)
         }
     }
 
-    private fun calculateOver35Probability(expectedGoals: Double): Int {
-        return when {
-            expectedGoals >= 4.5 -> 65
-            expectedGoals >= 4.0 -> 55
-            expectedGoals >= 3.5 -> 45
-            expectedGoals >= 3.0 -> 35
-            expectedGoals >= 2.5 -> 25
-            else -> 15
-        }
+    private fun sortFixturesByLeaguePriority(fixtures: List<FixtureResponse>): List<FixtureResponse> {
+        val priorityLeagueIds = listOf(203, 39, 140, 78, 135, 61, 2, 3)
+        return fixtures.sortedWith(compareBy(
+            { if (it.league.id in priorityLeagueIds) priorityLeagueIds.indexOf(it.league.id) else 999 },
+            { it.fixture.timestamp }
+        ))
     }
 
-    private fun calculateBTTSProbability(homeGoals: Double, awayGoals: Double): Int {
-        val homeScoreProb = (1 - exp(-homeGoals)) * 100
-        val awayScoreProb = (1 - exp(-awayGoals)) * 100
-        return ((homeScoreProb / 100) * (awayScoreProb / 100) * 100).toInt().coerceIn(20, 80)
+    fun formatMatchTime(timestamp: Long): String {
+        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+        sdf.timeZone = TimeZone.getTimeZone("Europe/Istanbul")
+        return sdf.format(Date(timestamp * 1000))
     }
 
-    private fun calculateHTGoalProbability(expectedTotalGoals: Double): Int {
-        val htExpected = expectedTotalGoals * 0.45
-        return when {
-            htExpected >= 1.5 -> 75
-            htExpected >= 1.0 -> 65
-            htExpected >= 0.8 -> 58
-            else -> 48
-        }
+    fun formatMatchDate(timestamp: Long): String {
+        val sdf = SimpleDateFormat("dd MMMM yyyy, EEEE", Locale("tr"))
+        sdf.timeZone = TimeZone.getTimeZone("Europe/Istanbul")
+        return sdf.format(Date(timestamp * 1000))
     }
 
-    private fun calculateConfidenceScore(maxProb: Int, home: TeamSeasonStats?, away: TeamSeasonStats?): Int {
-        var score = maxProb
-        if (home != null) score += 5
-        if (away != null) score += 5
-        if (maxProb < 40) score -= 10
-        return score.coerceIn(45, 95)
-    }
-
-    private fun generateAIComment(
-        home: TeamSeasonStats?,
-        away: TeamSeasonStats?,
-        homeWinProb: Int,
-        awayWinProb: Int,
-        confidence: Int,
-        expectedGoals: Double
-    ): String {
-        val homeName = home?.team?.name ?: "Ev Sahibi"
-        val awayName = away?.team?.name ?: "Deplasman"
-
-        return buildString {
-            when {
-                homeWinProb > 50 -> append("$homeName son dönemde iç sahada çok güçlü bir performans sergiliyor. ")
-                awayWinProb > 50 -> append("$awayName deplasman performansıyla dikkat çekiyor. ")
-                else -> append("Bu maç oldukça dengeli görünüyor. ")
-            }
-
-            if (expectedGoals > 2.8) {
-                append("Maçın gol ziyafeti şeklinde geçmesi bekleniyor. ")
-            } else if (expectedGoals < 1.8) {
-                append("Savunma odaklı bir mücadele bekleniyor. ")
-            }
-
-            if (confidence >= 75) {
-                append("AI sistemimiz bu maç için yüksek güven skoruyla tahmin yapıyor.")
-            } else if (confidence >= 60) {
-                append("Orta seviyede güven ile tahmin yapılmıştır.")
-            } else {
-                append("Bu maçta belirsizlik faktörü yüksek, dikkatli olunmalıdır.")
-            }
+    fun getLeagueName(fixture: FixtureResponse): String {
+        return when (fixture.league.id) {
+            203 -> "Süper Lig"
+            39 -> "Premier Lig"
+            140 -> "La Liga"
+            78 -> "Bundesliga"
+            135 -> "Serie A"
+            61 -> "Ligue 1"
+            2 -> "Şampiyonlar Ligi"
+            3 -> "Avrupa Ligi"
+            else -> fixture.league.name
         }
-    }
-
-    private fun getFallbackPrediction(homeTeamId: Int, awayTeamId: Int, homeTeamName: String = "", awayTeamName: String = ""): PredictionModel {
-        val seed = abs((homeTeamId * 31 + awayTeamId * 17))
-        val rng = java.util.Random(seed.toLong())
-
-        val homeKnown = lookupTeamStrength(homeTeamName)
-        val awayKnown = lookupTeamStrength(awayTeamName)
-
-        val homeWinProb: Int
-        var awayWinProb: Int
-
-        if (homeKnown != null || awayKnown != null) {
-            val homeStrength = (homeKnown ?: 50) + 5
-            val awayStrength = awayKnown ?: 50
-            val total = homeStrength + awayStrength
-
-            homeWinProb = ((homeStrength.toDouble() / total) * 72).toInt().coerceIn(8, 85)
-            awayWinProb = ((awayStrength.toDouble() / total) * 72).toInt().coerceIn(8, 85)
-        } else {
-            homeWinProb = 30 + rng.nextInt(26)
-            awayWinProb = 20 + rng.nextInt(21)
-        }
-
-        if (homeWinProb + awayWinProb >= 95) awayWinProb = 95 - homeWinProb
-        val drawProb = (100 - homeWinProb - awayWinProb).coerceIn(10, 40)
-
-        val total = homeWinProb + drawProb + awayWinProb
-        val adjHomeWin = (homeWinProb * 100.0 / total).toInt()
-        val adjDraw = (drawProb * 100.0 / total).toInt()
-        val adjAwayWin = 100 - adjHomeWin - adjDraw
-
-        val over25 = 45 + rng.nextInt(31)
-        val over35 = (over25 * 0.55).toInt().coerceIn(20, 55)
-        val btts = 40 + rng.nextInt(31)
-        val htGoal = 45 + rng.nextInt(31)
-
-        val maxProb = maxOf(adjHomeWin, adjDraw, adjAwayWin)
-        val confidence = if (homeKnown != null || awayKnown != null) {
-            (maxProb + 10).coerceIn(55, 90)
-        } else {
-            (55 + rng.nextInt(21)).coerceIn(50, 80)
-        }
-
-        val riskLevel = when {
-            confidence >= 70 -> "Düşük Risk"
-            confidence >= 58 -> "Orta Risk"
-            else -> "Yüksek Risk"
-        }
-
-        return PredictionModel(
-            matchId = 0,
-            homeWinProbability = adjHomeWin,
-            drawProbability = adjDraw,
-            awayWinProbability = adjAwayWin,
-            confidenceScore = confidence,
-            riskLevel = riskLevel,
-            over25Probability = over25,
-            under25Probability = 100 - over25,
-            over35Probability = over35,
-            under35Probability = 100 - over35,
-            bttsYesProbability = btts,
-            bttsNoProbability = 100 - btts,
-            htGoalYesProbability = htGoal,
-            htGoalNoProbability = 100 - htGoal,
-            aiComment = "Bu lig/sezon için detaylı istatistik bulunamadı. Genel form ve eğilimlere dayalı tahmindir."
-        )
-    }
-
-    fun calculateAIScore(prediction: PredictionModel): Int {
-        val maxProb = maxOf(prediction.homeWinProbability, prediction.drawProbability, prediction.awayWinProbability)
-        return ((prediction.confidenceScore * 0.5 + maxProb * 0.5)).toInt().coerceIn(60, 99)
     }
 }

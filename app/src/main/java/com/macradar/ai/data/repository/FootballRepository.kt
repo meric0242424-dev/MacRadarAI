@@ -1,7 +1,10 @@
 package com.macradar.ai.data.repository
 
+import android.content.Context
 import com.macradar.ai.data.api.ApiClient
 import com.macradar.ai.data.api.FootballApiService
+import com.macradar.ai.data.cache.ApiCache
+import com.macradar.ai.data.cache.getTyped
 import com.macradar.ai.data.model.*
 import com.macradar.ai.utils.AIPredictionEngine
 import kotlinx.coroutines.Dispatchers
@@ -15,23 +18,27 @@ sealed class Result<out T> {
     object Loading : Result<Nothing>()
 }
 
-class FootballRepository {
+class FootballRepository(context: Context) {
 
     private val apiService: FootballApiService = ApiClient.footballApiService
     private val apiKey: String = ApiClient.API_KEY
-
-    private val fixtureCache = mutableMapOf<String, List<FixtureResponse>>()
-    private val predictionCache = mutableMapOf<Int, PredictionModel>()
+    private val cache = ApiCache(context.applicationContext)
 
     suspend fun getTodayMatches(): Result<List<FixtureResponse>> = withContext(Dispatchers.IO) {
         try {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            fixtureCache[today]?.let { return@withContext Result.Success(it) }
+            val cacheKey = "fixtures_$today"
+
+            cache.getTyped<List<FixtureResponse>>(cacheKey)?.let {
+                return@withContext Result.Success(it)
+            }
+
             val response = apiService.getFixturesByDate(today, "Europe/Istanbul", apiKey)
+
             if (response.isSuccessful) {
                 val fixtures = response.body()?.response ?: emptyList()
                 val sorted = sortFixturesByLeaguePriority(fixtures)
-                fixtureCache[today] = sorted
+                cache.put(cacheKey, sorted, ApiCache.TTL_FIXTURES_MS)
                 Result.Success(sorted)
             } else {
                 Result.Error("API Hatası: ${response.code()}", response.code())
@@ -46,12 +53,18 @@ class FootballRepository {
             val cal = Calendar.getInstance()
             cal.add(Calendar.DAY_OF_YEAR, 1)
             val tomorrow = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.time)
-            fixtureCache[tomorrow]?.let { return@withContext Result.Success(it) }
+            val cacheKey = "fixtures_$tomorrow"
+
+            cache.getTyped<List<FixtureResponse>>(cacheKey)?.let {
+                return@withContext Result.Success(it)
+            }
+
             val response = apiService.getFixturesByDate(tomorrow, "Europe/Istanbul", apiKey)
+
             if (response.isSuccessful) {
                 val fixtures = response.body()?.response ?: emptyList()
                 val sorted = sortFixturesByLeaguePriority(fixtures)
-                fixtureCache[tomorrow] = sorted
+                cache.put(cacheKey, sorted, ApiCache.TTL_FIXTURES_MS)
                 Result.Success(sorted)
             } else {
                 Result.Error("API Hatası: ${response.code()}", response.code())
@@ -76,10 +89,16 @@ class FootballRepository {
 
     suspend fun getMatchDetail(fixtureId: Int): Result<FixtureResponse> = withContext(Dispatchers.IO) {
         try {
+            val cacheKey = "fixture_detail_$fixtureId"
+            cache.getTyped<FixtureResponse>(cacheKey)?.let {
+                return@withContext Result.Success(it)
+            }
+
             val response = apiService.getFixtureById(fixtureId, apiKey = apiKey)
             if (response.isSuccessful) {
                 val fixture = response.body()?.response?.firstOrNull()
                     ?: return@withContext Result.Error("Maç bulunamadı")
+                cache.put(cacheKey, fixture, 60_000L)
                 Result.Success(fixture)
             } else {
                 Result.Error("API Hatası: ${response.code()}")
@@ -131,10 +150,16 @@ class FootballRepository {
     suspend fun getTeamStatistics(teamId: Int, leagueId: Int, season: Int): Result<TeamSeasonStats> =
         withContext(Dispatchers.IO) {
             try {
+                val cacheKey = "team_stats_${teamId}_${leagueId}_$season"
+                cache.getTyped<TeamSeasonStats>(cacheKey)?.let {
+                    return@withContext Result.Success(it)
+                }
+
                 val response = apiService.getTeamStatistics(teamId, season, leagueId, apiKey)
                 if (response.isSuccessful) {
                     val stats = response.body()?.response?.firstOrNull()
                         ?: return@withContext Result.Error("İstatistikler bulunamadı")
+                    cache.put(cacheKey, stats, ApiCache.TTL_TEAM_STATS_MS)
                     Result.Success(stats)
                 } else {
                     Result.Error("Takım istatistikleri yüklenemedi")
@@ -147,10 +172,16 @@ class FootballRepository {
     suspend fun getStandings(leagueId: Int, season: Int): Result<List<StandingItem>> =
         withContext(Dispatchers.IO) {
             try {
+                val cacheKey = "standings_${leagueId}_$season"
+                cache.getTyped<List<StandingItem>>(cacheKey)?.let {
+                    return@withContext Result.Success(it)
+                }
+
                 val response = apiService.getStandings(leagueId, season, apiKey)
                 if (response.isSuccessful) {
                     val standingResponse: StandingResponse? = response.body()?.response?.firstOrNull()
                     val standings: List<StandingItem> = standingResponse?.league?.standings?.firstOrNull() ?: emptyList()
+                    cache.put(cacheKey, standings, ApiCache.TTL_TEAM_STATS_MS)
                     Result.Success(standings)
                 } else {
                     Result.Error("Puan durumu yüklenemedi")
@@ -163,10 +194,17 @@ class FootballRepository {
     suspend fun getHeadToHead(homeTeamId: Int, awayTeamId: Int): Result<List<FixtureResponse>> =
         withContext(Dispatchers.IO) {
             try {
+                val cacheKey = "h2h_${homeTeamId}_$awayTeamId"
+                cache.getTyped<List<FixtureResponse>>(cacheKey)?.let {
+                    return@withContext Result.Success(it)
+                }
+
                 val h2hQuery = "$homeTeamId-$awayTeamId"
                 val response = apiService.getHeadToHead(h2hQuery, 10, apiKey)
                 if (response.isSuccessful) {
-                    Result.Success(response.body()?.response ?: emptyList())
+                    val data = response.body()?.response ?: emptyList()
+                    cache.put(cacheKey, data, ApiCache.TTL_H2H_MS)
+                    Result.Success(data)
                 } else {
                     Result.Error("H2H verisi yüklenemedi")
                 }
@@ -184,7 +222,8 @@ class FootballRepository {
         homeTeamName: String = "",
         awayTeamName: String = ""
     ): Result<PredictionModel> = withContext(Dispatchers.IO) {
-        predictionCache[fixtureId]?.let {
+        val predCacheKey = "prediction_$fixtureId"
+        cache.getTyped<PredictionModel>(predCacheKey)?.let {
             return@withContext Result.Success(it)
         }
 
@@ -197,15 +236,11 @@ class FootballRepository {
                 (getTeamStatistics(awayTeamId, leagueId, season) as? Result.Success)?.data
             } catch (e: Exception) { null }
 
-            val h2h = try {
-                (getHeadToHead(homeTeamId, awayTeamId) as? Result.Success)?.data
-            } catch (e: Exception) { null }
-
             val prediction = AIPredictionEngine.calculatePrediction(
-                homeStats, awayStats, h2h, homeTeamId, awayTeamId, homeTeamName, awayTeamName
+                homeStats, awayStats, null, homeTeamId, awayTeamId, homeTeamName, awayTeamName
             ).copy(matchId = fixtureId)
 
-            predictionCache[fixtureId] = prediction
+            cache.put(predCacheKey, prediction, ApiCache.TTL_PREDICTION_MS)
             Result.Success(prediction)
 
         } catch (e: Exception) {

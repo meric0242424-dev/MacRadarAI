@@ -189,42 +189,42 @@ object AIPredictionEngine {
         return ((homeWins - awayWins).toDouble() / maxOf(h2hMatches.size, 1))
     }
 
-    private fun calculateOver25Probability(expectedGoals: Double): Int {
-        return when {
-            expectedGoals >= 3.5 -> 78
-            expectedGoals >= 3.0 -> 70
-            expectedGoals >= 2.5 -> 62
-            expectedGoals >= 2.0 -> 50
-            expectedGoals >= 1.5 -> 38
-            else -> 28
+    /** Poisson probability mass function: P(X = k) for a given mean (lambda) */
+    private fun poissonPmf(k: Int, lambda: Double): Double {
+        if (lambda <= 0.0) return if (k == 0) 1.0 else 0.0
+        var factorial = 1.0
+        for (i in 2..k) factorial *= i
+        return (Math.pow(lambda, k.toDouble()) * exp(-lambda)) / factorial
+    }
+
+    /** P(total goals > threshold) via Poisson, summing P(X=0..threshold) and subtracting from 1 */
+    private fun poissonOverProbability(expectedGoals: Double, threshold: Int): Int {
+        var cumulative = 0.0
+        for (k in 0..threshold) {
+            cumulative += poissonPmf(k, expectedGoals)
         }
+        val overProb = (1.0 - cumulative) * 100
+        return overProb.toInt().coerceIn(5, 95)
+    }
+
+    private fun calculateOver25Probability(expectedGoals: Double): Int {
+        return poissonOverProbability(expectedGoals, 2)
     }
 
     private fun calculateOver35Probability(expectedGoals: Double): Int {
-        return when {
-            expectedGoals >= 4.5 -> 65
-            expectedGoals >= 4.0 -> 55
-            expectedGoals >= 3.5 -> 45
-            expectedGoals >= 3.0 -> 35
-            expectedGoals >= 2.5 -> 25
-            else -> 15
-        }
+        return poissonOverProbability(expectedGoals, 3)
     }
 
     private fun calculateBTTSProbability(homeGoals: Double, awayGoals: Double): Int {
         val homeScoreProb = (1 - exp(-homeGoals)) * 100
         val awayScoreProb = (1 - exp(-awayGoals)) * 100
-        return ((homeScoreProb / 100) * (awayScoreProb / 100) * 100).toInt().coerceIn(20, 80)
+        return ((homeScoreProb / 100) * (awayScoreProb / 100) * 100).toInt().coerceIn(15, 85)
     }
 
     private fun calculateHTGoalProbability(expectedTotalGoals: Double): Int {
         val htExpected = expectedTotalGoals * 0.45
-        return when {
-            htExpected >= 1.5 -> 75
-            htExpected >= 1.0 -> 65
-            htExpected >= 0.8 -> 58
-            else -> 48
-        }
+        val noGoalProb = poissonPmf(0, htExpected)
+        return ((1.0 - noGoalProb) * 100).toInt().coerceIn(15, 90)
     }
 
     private fun calculateConfidenceScore(maxProb: Int, home: TeamSeasonStats?, away: TeamSeasonStats?): Int {

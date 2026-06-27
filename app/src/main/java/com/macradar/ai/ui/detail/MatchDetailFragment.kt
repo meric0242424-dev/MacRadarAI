@@ -115,6 +115,126 @@ class MatchDetailFragment : Fragment() {
                 is Result.Error -> showStatsMessage("İstatistikler şu an için kullanılamıyor.")
             }
         }
+
+        viewModel.h2h.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Result.Loading -> showComparisonMessage("Karşılaştırma verisi yükleniyor...")
+                is Result.Success -> displayH2H(result.data)
+                is Result.Error -> showComparisonMessage("Karşılaştırma verisi şu an için kullanılamıyor.")
+            }
+        }
+
+        viewModel.lineups.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Result.Loading -> showSquadsMessage("Kadrolar yükleniyor...")
+                is Result.Success -> displayLineups(result.data)
+                is Result.Error -> showSquadsMessage("Kadro bilgisi şu an için kullanılamıyor.")
+            }
+        }
+    }
+
+    private fun showComparisonMessage(message: String) {
+        binding.layoutComparison.removeAllViews()
+        val tv = android.widget.TextView(requireContext()).apply {
+            text = message
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+            textSize = 14f
+        }
+        binding.layoutComparison.addView(tv)
+    }
+
+    private fun displayH2H(matches: List<com.macradar.ai.data.model.FixtureResponse>) {
+        binding.layoutComparison.removeAllViews()
+
+        if (matches.isEmpty()) {
+            showComparisonMessage("Bu takımlar arasında geçmiş maç verisi bulunamadı.")
+            return
+        }
+
+        val title = android.widget.TextView(requireContext()).apply {
+            text = "Son ${matches.size} Karşılaşma"
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+            textSize = 15f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp(16))
+        }
+        binding.layoutComparison.addView(title)
+
+        for (match in matches.take(10)) {
+            val row = android.widget.LinearLayout(requireContext()).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(0, dp(10), 0, dp(10))
+            }
+
+            val dateTv = android.widget.TextView(requireContext()).apply {
+                text = viewModel.run {
+                    val sdf = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale("tr"))
+                    sdf.format(java.util.Date(match.fixture.timestamp * 1000))
+                }
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_hint))
+                textSize = 11f
+            }
+
+            val scoreTv = android.widget.TextView(requireContext()).apply {
+                text = "${match.teams.home.name}  ${match.goals.home ?: 0} - ${match.goals.away ?: 0}  ${match.teams.away.name}"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                textSize = 14f
+                setPadding(0, dp(4), 0, 0)
+            }
+
+            row.addView(dateTv)
+            row.addView(scoreTv)
+            binding.layoutComparison.addView(row)
+
+            val divider = View(requireContext()).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dp(1)
+                )
+                setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.divider_color))
+            }
+            binding.layoutComparison.addView(divider)
+        }
+    }
+
+    private fun showSquadsMessage(message: String) {
+        binding.layoutSquads.removeAllViews()
+        val tv = android.widget.TextView(requireContext()).apply {
+            text = message
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+            textSize = 14f
+        }
+        binding.layoutSquads.addView(tv)
+    }
+
+    private fun displayLineups(lineups: List<com.macradar.ai.data.model.Lineup>) {
+        binding.layoutSquads.removeAllViews()
+
+        if (lineups.size < 2) {
+            showSquadsMessage("Bu maç için henüz kadro bilgisi yayınlanmadı.\nKadrolar genellikle maçtan kısa süre önce açıklanır.")
+            return
+        }
+
+        for (lineup in lineups) {
+            val teamHeader = android.widget.TextView(requireContext()).apply {
+                text = "${lineup.team.name}${if (lineup.formation != null) " (${lineup.formation})" else ""}"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_green))
+                textSize = 15f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setPadding(0, dp(12), 0, dp(8))
+            }
+            binding.layoutSquads.addView(teamHeader)
+
+            for (playerLineup in lineup.startXI) {
+                val p = playerLineup.player
+                val row = android.widget.TextView(requireContext()).apply {
+                    text = "${p.number}.  ${p.name}" + (if (p.pos != null) "  (${p.pos})" else "")
+                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                    textSize = 13f
+                    setPadding(0, dp(4), 0, dp(4))
+                }
+                binding.layoutSquads.addView(row)
+            }
+        }
     }
 
     private fun showStatsMessage(message: String) {

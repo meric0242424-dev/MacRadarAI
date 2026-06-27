@@ -1,25 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_dark"
-    android:gravity="center"
     android:orientation="vertical">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Maçlar"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Tüm Maçlar"
         android:textColor="@color/text_primary"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"/>
 
-    <TextView
+    <EditText
+        android:id="@+id/etSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_shimmer_rounded"
+        android:hint="Takım veya lig ara..."
+        android:textColorHint="@color/text_hint"
+        android:textColor="@color/text_primary"
+        android:padding="12dp"
+        android:inputType="text"
+        android:singleLine="true"
+        android:drawablePadding="8dp"/>
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayoutMatches"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/background_dark"
+        app:tabSelectedTextColor="@color/accent_green"
+        app:tabTextColor="@color/text_hint"
+        app:tabIndicatorColor="@color/accent_green"
+        app:tabIndicatorHeight="2dp"/>
+
+    <ProgressBar
+        android:id="@+id/progressMatches"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Yakında gelecek..."
+        android:layout_gravity="center"
+        android:layout_marginTop="40dp"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tvEmptyMatches"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:gravity="center"
+        android:text="Maç bulunamadı."
         android:textColor="@color/text_secondary"
-        android:textSize="14sp"/>
+        android:textSize="14sp"
+        android:visibility="gone"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAllMatches"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="16dp"
+        android:clipToPadding="false"/>
 
 </LinearLayout>

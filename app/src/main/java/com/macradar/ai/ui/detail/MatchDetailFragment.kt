@@ -129,6 +129,11 @@ class MatchDetailFragment : Fragment() {
             setupGoalBar(progressUnder25, pred.under25Probability)
             tvUnder25Percent.text = "%${pred.under25Probability}"
 
+            setupGoalBar(progressOver35, pred.over35Probability)
+            tvOver35Percent.text = "%${pred.over35Probability}"
+            setupGoalBar(progressUnder35, pred.under35Probability)
+            tvUnder35Percent.text = "%${pred.under35Probability}"
+
             setupGoalBar(progressBttsYes, pred.bttsYesProbability)
             tvBttsYesPercent.text = "%${pred.bttsYesProbability}"
             setupGoalBar(progressBttsNo, pred.bttsNoProbability)
@@ -139,7 +144,13 @@ class MatchDetailFragment : Fragment() {
             setupGoalBar(progressHtGoalNo, pred.htGoalNoProbability)
             tvHtGoalNoPercent.text = "%${pred.htGoalNoProbability}"
 
-            tvPredictedScore.text = "${pred.predictedHomeScore} - ${pred.predictedAwayScore}"
+            val maxProb = maxOf(pred.homeWinProbability, pred.drawProbability, pred.awayWinProbability)
+            tvPredictedWinner.text = when (maxProb) {
+                pred.homeWinProbability -> "${tvHomeTeam.text} Kazanır"
+                pred.awayWinProbability -> "${tvAwayTeam.text} Kazanır"
+                else -> "Beraberlik Bekleniyor"
+            }
+            tvPredictedWinnerProb.text = "%$maxProb olasılıkla"
 
             cardPrediction.startAnimation(AnimationUtils.loadAnimation(requireContext(), R.anim.slide_up_fade_in))
         }
@@ -187,10 +198,16 @@ class MatchDetailFragment : Fragment() {
             appendLine("⚽ MAÇ RADAR AI TAHMİNİ")
             appendLine("${fixture.teams.home.name} vs ${fixture.teams.away.name}")
             if (pred != null) {
+                val maxProb = maxOf(pred.homeWinProbability, pred.drawProbability, pred.awayWinProbability)
+                val winnerText = when (maxProb) {
+                    pred.homeWinProbability -> "${fixture.teams.home.name} Kazanır"
+                    pred.awayWinProbability -> "${fixture.teams.away.name} Kazanır"
+                    else -> "Beraberlik"
+                }
+                appendLine("🏆 Tahmin: $winnerText (%$maxProb)")
                 appendLine("🎯 Güven: ${pred.confidenceScore}/100  |  Risk: ${pred.riskLevel}")
                 appendLine("📊 Ev %${pred.homeWinProbability}  |  Beraberlik %${pred.drawProbability}  |  Deplasman %${pred.awayWinProbability}")
-                appendLine("⚽ Tahmin: ${pred.predictedHomeScore} - ${pred.predictedAwayScore}")
-                appendLine("📈 2.5 Üst: %${pred.over25Probability}  |  KG Var: %${pred.bttsYesProbability}")
+                appendLine("📈 2.5 Üst: %${pred.over25Probability}  |  3.5 Üst: %${pred.over35Probability}  |  KG Var: %${pred.bttsYesProbability}")
             }
             appendLine("#MacRadarAI")
         }

@@ -335,4 +335,34 @@ object AIPredictionEngine {
         val maxProb = maxOf(prediction.homeWinProbability, prediction.drawProbability, prediction.awayWinProbability)
         return ((prediction.confidenceScore * 0.5 + maxProb * 0.5)).toInt().coerceIn(60, 99)
     }
+
+    fun calculateLiveGoalProbability(
+        homeTeamStats: TeamSeasonStats?,
+        awayTeamStats: TeamSeasonStats?,
+        homeTeamId: Int,
+        awayTeamId: Int,
+        homeTeamName: String,
+        awayTeamName: String,
+        currentMinute: Int
+    ): Int {
+        val leagueAvgGoals = 1.3
+
+        val expectedTotalGoals: Double = if (homeTeamStats == null && awayTeamStats == null) {
+            val homeKnown = lookupTeamStrength(homeTeamName)
+            val awayKnown = lookupTeamStrength(awayTeamName)
+            if (homeKnown != null || awayKnown != null) 2.4 else 2.5
+        } else {
+            val homeAvgGoals = homeTeamStats?.goals?.goalsFor?.average?.home?.toDoubleOrNull() ?: leagueAvgGoals
+            val awayAvgGoals = awayTeamStats?.goals?.goalsFor?.average?.away?.toDoubleOrNull() ?: leagueAvgGoals
+            val homeAvgConceded = homeTeamStats?.goals?.against?.average?.home?.toDoubleOrNull() ?: leagueAvgGoals
+            val awayAvgConceded = awayTeamStats?.goals?.against?.average?.away?.toDoubleOrNull() ?: leagueAvgGoals
+            ((homeAvgGoals + awayAvgConceded) / 2) + ((awayAvgGoals + homeAvgConceded) / 2)
+        }
+
+        val minutesRemaining = (90 - currentMinute).coerceIn(1, 90)
+        val remainingGoalExpectation = expectedTotalGoals * (minutesRemaining / 90.0)
+
+        val noGoalProb = poissonPmf(0, remainingGoalExpectation)
+        return ((1.0 - noGoalProb) * 100).toInt().coerceIn(5, 95)
+    }
 }

@@ -9,7 +9,6 @@ import com.macradar.ai.data.model.FixtureResponse
 import com.macradar.ai.data.model.TopPrediction
 import com.macradar.ai.data.repository.FootballRepository
 import com.macradar.ai.data.repository.Result
-import com.macradar.ai.utils.AIPredictionEngine
 import kotlinx.coroutines.launch
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
@@ -21,6 +20,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _topPredictions = MutableLiveData<List<TopPrediction>>()
     val topPredictions: LiveData<List<TopPrediction>> = _topPredictions
+
+    private val _liveGoalPredictions = MutableLiveData<Map<Int, String>>(emptyMap())
+    val liveGoalPredictions: LiveData<Map<Int, String>> = _liveGoalPredictions
 
     private var allFixtures: List<FixtureResponse> = emptyList()
 
@@ -49,10 +51,35 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun loadPopularMatches() {
-        val popularLeagueIds = setOf(39, 140, 78, 135, 2, 203, 61, 94, 88, 71)
-        val popular = allFixtures.filter { it.league.id in popularLeagueIds }
-        _matches.value = Result.Success((if (popular.isEmpty()) allFixtures else popular).take(25))
+    fun loadLiveMatches() {
+        viewModelScope.launch {
+            _matches.value = Result.Loading
+            val result = repository.getLiveMatches()
+            if (result is Result.Success) {
+                _matches.value = Result.Success(result.data.take(25))
+            } else {
+                _matches.value = result
+            }
+        }
+    }
+
+    fun requestLiveGoalPrediction(fixture: FixtureResponse) {
+        viewModelScope.launch {
+            val minute = fixture.fixture.status.elapsed ?: 0
+            val prob = repository.generateLiveGoalPrediction(
+                homeTeamId = fixture.teams.home.id,
+                awayTeamId = fixture.teams.away.id,
+                leagueId = fixture.league.id,
+                season = fixture.league.season,
+                homeTeamName = fixture.teams.home.name,
+                awayTeamName = fixture.teams.away.name,
+                currentMinute = minute
+            )
+            val label = if (prob >= 50) "Gol Olur  %$prob" else "Gol Olmaz  %${100 - prob}"
+            val updated = (_liveGoalPredictions.value ?: emptyMap()).toMutableMap()
+            updated[fixture.fixture.id] = label
+            _liveGoalPredictions.value = updated
+        }
     }
 
     fun loadTopPredictions() {

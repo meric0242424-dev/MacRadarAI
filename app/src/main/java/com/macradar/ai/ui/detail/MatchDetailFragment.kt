@@ -39,7 +39,6 @@ class MatchDetailFragment : Fragment() {
         setupTabLayout()
         setupObservers()
         viewModel.loadMatchDetail()
-        viewModel.loadPrediction()
     }
 
     private fun setupTabLayout() {

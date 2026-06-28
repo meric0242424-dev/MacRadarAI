@@ -335,15 +335,16 @@ class MatchDetailFragment : Fragment() {
             setupGoalBar(progressBttsNo, pred.bttsNoProbability)
             tvBttsNoPercent.text = "%${pred.bttsNoProbability}"
 
-            setupGoalBar(progressHtGoalYes, pred.htGoalYesProbability)
-            tvHtGoalYesPercent.text = "%${pred.htGoalYesProbability}"
-            setupGoalBar(progressHtGoalNo, pred.htGoalNoProbability)
-            tvHtGoalNoPercent.text = "%${pred.htGoalNoProbability}"
+            val homeP = pred.homeWinProbability
+            val drawP = pred.drawProbability
+            val awayP = pred.awayWinProbability
+            val maxProb = maxOf(homeP, drawP, awayP)
+            val closeCount = listOf(homeP, drawP, awayP).count { it >= maxProb - 2 }
 
-            val maxProb = maxOf(pred.homeWinProbability, pred.drawProbability, pred.awayWinProbability)
-            tvPredictedWinner.text = when (maxProb) {
-                pred.homeWinProbability -> "${tvHomeTeam.text} Kazanır"
-                pred.awayWinProbability -> "${tvAwayTeam.text} Kazanır"
+            tvPredictedWinner.text = when {
+                closeCount > 1 -> "Sonuç Belirsiz"
+                maxProb == homeP -> "${tvHomeTeam.text} Kazanır"
+                maxProb == awayP -> "${tvAwayTeam.text} Kazanır"
                 else -> "Beraberlik Bekleniyor"
             }
             tvPredictedWinnerProb.text = "%$maxProb olasılıkla"
@@ -394,10 +395,15 @@ class MatchDetailFragment : Fragment() {
             appendLine("⚽ MAÇ RADAR AI TAHMİNİ")
             appendLine("${fixture.teams.home.name} vs ${fixture.teams.away.name}")
             if (pred != null) {
-                val maxProb = maxOf(pred.homeWinProbability, pred.drawProbability, pred.awayWinProbability)
-                val winnerText = when (maxProb) {
-                    pred.homeWinProbability -> "${fixture.teams.home.name} Kazanır"
-                    pred.awayWinProbability -> "${fixture.teams.away.name} Kazanır"
+                val homeP = pred.homeWinProbability
+                val drawP = pred.drawProbability
+                val awayP = pred.awayWinProbability
+                val maxProb = maxOf(homeP, drawP, awayP)
+                val closeCount = listOf(homeP, drawP, awayP).count { it >= maxProb - 2 }
+                val winnerText = when {
+                    closeCount > 1 -> "Sonuç Belirsiz"
+                    maxProb == homeP -> "${fixture.teams.home.name} Kazanır"
+                    maxProb == awayP -> "${fixture.teams.away.name} Kazanır"
                     else -> "Beraberlik"
                 }
                 appendLine("🏆 Tahmin: $winnerText (%$maxProb)")

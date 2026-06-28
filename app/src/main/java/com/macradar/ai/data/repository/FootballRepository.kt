@@ -110,9 +110,16 @@ class FootballRepository(context: Context) {
 
     suspend fun getMatchStatistics(fixtureId: Int): Result<List<TeamStats>> = withContext(Dispatchers.IO) {
         try {
+            val cacheKey = "match_stats_$fixtureId"
+            cache.getTyped<List<TeamStats>>(cacheKey)?.let {
+                return@withContext Result.Success(it)
+            }
+
             val response = apiService.getFixtureStatistics(fixtureId, apiKey)
             if (response.isSuccessful) {
-                Result.Success(response.body()?.response ?: emptyList())
+                val stats = response.body()?.response ?: emptyList()
+                cache.put(cacheKey, stats, 2 * 60_000L)
+                Result.Success(stats)
             } else {
                 Result.Error("İstatistikler yüklenemedi")
             }
@@ -123,9 +130,18 @@ class FootballRepository(context: Context) {
 
     suspend fun getMatchLineups(fixtureId: Int): Result<List<Lineup>> = withContext(Dispatchers.IO) {
         try {
+            val cacheKey = "match_lineups_$fixtureId"
+            cache.getTyped<List<Lineup>>(cacheKey)?.let {
+                return@withContext Result.Success(it)
+            }
+
             val response = apiService.getFixtureLineups(fixtureId, apiKey)
             if (response.isSuccessful) {
-                Result.Success(response.body()?.response ?: emptyList())
+                val lineups = response.body()?.response ?: emptyList()
+                if (lineups.isNotEmpty()) {
+                    cache.put(cacheKey, lineups, 60 * 60_000L)
+                }
+                Result.Success(lineups)
             } else {
                 Result.Error("Kadrolar yüklenemedi")
             }
@@ -136,9 +152,16 @@ class FootballRepository(context: Context) {
 
     suspend fun getMatchEvents(fixtureId: Int): Result<List<MatchEvent>> = withContext(Dispatchers.IO) {
         try {
+            val cacheKey = "match_events_$fixtureId"
+            cache.getTyped<List<MatchEvent>>(cacheKey)?.let {
+                return@withContext Result.Success(it)
+            }
+
             val response = apiService.getFixtureEvents(fixtureId, apiKey)
             if (response.isSuccessful) {
-                Result.Success(response.body()?.response ?: emptyList())
+                val events = response.body()?.response ?: emptyList()
+                cache.put(cacheKey, events, 2 * 60_000L)
+                Result.Success(events)
             } else {
                 Result.Error("Olaylar yüklenemedi")
             }

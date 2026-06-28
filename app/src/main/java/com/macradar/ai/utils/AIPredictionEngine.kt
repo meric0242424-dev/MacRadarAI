@@ -5,10 +5,6 @@ import kotlin.math.*
 
 object AIPredictionEngine {
 
-    // Approximate relative strength (0-100) for well-known national teams,
-    // used only when no real statistics are available (e.g. World Cup fixtures
-    // on the free API plan). This prevents nonsensical results like a weak
-    // team being favored over a top team purely due to home-advantage + randomness.
     private val knownTeamStrength: Map<String, Int> = mapOf(
         "brazil" to 95, "argentina" to 94, "france" to 93, "england" to 91,
         "spain" to 90, "portugal" to 88, "netherlands" to 87, "germany" to 87,
@@ -27,9 +23,6 @@ object AIPredictionEngine {
         return knownTeamStrength[key]
     }
 
-    /**
-     * Calculate AI prediction based on team statistics, form, and historical data
-     */
     fun calculatePrediction(
         homeTeamStats: TeamSeasonStats?,
         awayTeamStats: TeamSeasonStats?,
@@ -40,8 +33,6 @@ object AIPredictionEngine {
         awayTeamName: String = ""
     ): PredictionModel {
 
-        // Fallback prediction if no team stats available (common on free API plans
-        // for smaller leagues/seasons, e.g. national team / World Cup fixtures).
         if (homeTeamStats == null && awayTeamStats == null) {
             return getFallbackPrediction(homeTeamId, awayTeamId, homeTeamName, awayTeamName)
         }
@@ -87,10 +78,12 @@ object AIPredictionEngine {
             drawProb = 100 - homeWinProb - awayWinProb
         }
 
-        val homeAvgGoals = homeTeamStats?.goals?.goalsFor?.average?.home?.toDoubleOrNull() ?: 1.5
-        val awayAvgGoals = awayTeamStats?.goals?.goalsFor?.average?.away?.toDoubleOrNull() ?: 1.2
-        val homeAvgConceded = homeTeamStats?.goals?.against?.average?.home?.toDoubleOrNull() ?: 1.3
-        val awayAvgConceded = awayTeamStats?.goals?.against?.average?.away?.toDoubleOrNull() ?: 1.6
+        val leagueAvgGoals = 1.3
+
+        val homeAvgGoals = homeTeamStats?.goals?.goalsFor?.average?.home?.toDoubleOrNull() ?: leagueAvgGoals
+        val awayAvgGoals = awayTeamStats?.goals?.goalsFor?.average?.away?.toDoubleOrNull() ?: leagueAvgGoals
+        val homeAvgConceded = homeTeamStats?.goals?.against?.average?.home?.toDoubleOrNull() ?: leagueAvgGoals
+        val awayAvgConceded = awayTeamStats?.goals?.against?.average?.away?.toDoubleOrNull() ?: leagueAvgGoals
 
         val expectedHomeGoals = (homeAvgGoals + awayAvgConceded) / 2
         val expectedAwayGoals = (awayAvgGoals + homeAvgConceded) / 2
@@ -189,7 +182,6 @@ object AIPredictionEngine {
         return ((homeWins - awayWins).toDouble() / maxOf(h2hMatches.size, 1))
     }
 
-    /** Poisson probability mass function: P(X = k) for a given mean (lambda) */
     private fun poissonPmf(k: Int, lambda: Double): Double {
         if (lambda <= 0.0) return if (k == 0) 1.0 else 0.0
         var factorial = 1.0
@@ -197,7 +189,6 @@ object AIPredictionEngine {
         return (Math.pow(lambda, k.toDouble()) * exp(-lambda)) / factorial
     }
 
-    /** P(total goals > threshold) via Poisson, summing P(X=0..threshold) and subtracting from 1 */
     private fun poissonOverProbability(expectedGoals: Double, threshold: Int): Int {
         var cumulative = 0.0
         for (k in 0..threshold) {
@@ -265,6 +256,10 @@ object AIPredictionEngine {
                 append("Orta seviyede güven ile tahmin yapılmıştır.")
             } else {
                 append("Bu maçta belirsizlik faktörü yüksek, dikkatli olunmalıdır.")
+            }
+
+            if (home == null || away == null) {
+                append(" (Not: ${if (home == null) homeName else awayName} için detaylı istatistik bulunamadı, kısmen tahmini değerler kullanıldı.)")
             }
         }
     }

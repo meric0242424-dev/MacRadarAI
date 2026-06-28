@@ -34,6 +34,10 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
 
     private var currentFixture: FixtureResponse? = null
 
+    private var statisticsLoaded = false
+    private var lineupsLoaded = false
+    private var h2hLoaded = false
+
     fun loadMatchDetail() {
         viewModelScope.launch {
             _fixture.value = Result.Loading
@@ -46,35 +50,33 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
                     val ag = result.data.goals.away ?: 0
                     storage.updateWithActualResult(fixtureId, hg, ag)
                 }
+                loadPredictionFor(result.data)
             }
             _fixture.value = result
         }
     }
 
-    fun loadPrediction() {
+    private fun loadPredictionFor(fixture: FixtureResponse) {
         viewModelScope.launch {
             _prediction.value = Result.Loading
-            val fixtureResult = repository.getMatchDetail(fixtureId)
-            if (fixtureResult is Result.Success) {
-                val fixture = fixtureResult.data
-                currentFixture = fixture
-                val result = repository.generatePrediction(
-                    fixtureId = fixture.fixture.id,
-                    homeTeamId = fixture.teams.home.id,
-                    awayTeamId = fixture.teams.away.id,
-                    leagueId = fixture.league.id,
-                    season = fixture.league.season,
-                    homeTeamName = fixture.teams.home.name,
-                    awayTeamName = fixture.teams.away.name
-                )
-                if (result is Result.Success) {
-                    savePredictionToHistory(fixture, result.data)
-                }
-                _prediction.value = result
-            } else {
-                _prediction.value = Result.Error("Tahmin oluşturulamadı")
+            val result = repository.generatePrediction(
+                fixtureId = fixture.fixture.id,
+                homeTeamId = fixture.teams.home.id,
+                awayTeamId = fixture.teams.away.id,
+                leagueId = fixture.league.id,
+                season = fixture.league.season,
+                homeTeamName = fixture.teams.home.name,
+                awayTeamName = fixture.teams.away.name
+            )
+            if (result is Result.Success) {
+                savePredictionToHistory(fixture, result.data)
             }
+            _prediction.value = result
         }
+    }
+
+    fun loadPrediction() {
+        currentFixture?.let { loadPredictionFor(it) }
     }
 
     private fun savePredictionToHistory(fixture: FixtureResponse, pred: PredictionModel) {
@@ -128,25 +130,31 @@ class MatchDetailViewModel(application: Application, private val fixtureId: Int)
         }
     }
 
-    fun loadStatistics() {
+    fun loadStatistics(forceRefresh: Boolean = false) {
+        if (statisticsLoaded && !forceRefresh) return
         viewModelScope.launch {
             _statistics.value = Result.Loading
             _statistics.value = repository.getMatchStatistics(fixtureId)
+            statisticsLoaded = true
         }
     }
 
-    fun loadLineups() {
+    fun loadLineups(forceRefresh: Boolean = false) {
+        if (lineupsLoaded && !forceRefresh) return
         viewModelScope.launch {
             _lineups.value = Result.Loading
             _lineups.value = repository.getMatchLineups(fixtureId)
+            lineupsLoaded = true
         }
     }
 
-    fun loadH2H() {
+    fun loadH2H(forceRefresh: Boolean = false) {
+        if (h2hLoaded && !forceRefresh) return
         viewModelScope.launch {
             val fixture = currentFixture ?: return@launch
             _h2h.value = Result.Loading
             _h2h.value = repository.getHeadToHead(fixture.teams.home.id, fixture.teams.away.id)
+            h2hLoaded = true
         }
     }
 

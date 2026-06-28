@@ -19,7 +19,9 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var matchAdapter: MatchListAdapter
+    private lateinit var liveMatchAdapter: LiveMatchAdapter
     private lateinit var topPredictionsAdapter: TopPredictionsAdapter
+    private var isLiveTab = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -39,6 +41,10 @@ class HomeFragment : Fragment() {
 
     private fun setupAdapters() {
         matchAdapter = MatchListAdapter { fixture -> navigateToMatchDetail(fixture) }
+        liveMatchAdapter = LiveMatchAdapter(
+            onPredictClick = { fixture -> viewModel.requestLiveGoalPrediction(fixture) },
+            onCardClick = { fixture -> navigateToMatchDetail(fixture) }
+        )
         binding.rvMatches.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = matchAdapter
@@ -52,9 +58,21 @@ class HomeFragment : Fragment() {
         binding.tabLayout.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
                 when (tab?.position) {
-                    0 -> viewModel.loadTodayMatches()
-                    1 -> viewModel.loadTomorrowMatches()
-                    2 -> viewModel.loadPopularMatches()
+                    0 -> {
+                        isLiveTab = false
+                        binding.rvMatches.adapter = matchAdapter
+                        viewModel.loadTodayMatches()
+                    }
+                    1 -> {
+                        isLiveTab = false
+                        binding.rvMatches.adapter = matchAdapter
+                        viewModel.loadTomorrowMatches()
+                    }
+                    2 -> {
+                        isLiveTab = true
+                        binding.rvMatches.adapter = liveMatchAdapter
+                        viewModel.loadLiveMatches()
+                    }
                 }
             }
             override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
@@ -88,11 +106,20 @@ class HomeFragment : Fragment() {
                     binding.shimmerLayout.visibility = View.GONE
                     if (result.data.isEmpty()) {
                         binding.tvNoMatches.visibility = View.VISIBLE
+                        binding.tvNoMatches.text = if (isLiveTab) {
+                            "Şu anda devam eden canlı maç bulunmuyor."
+                        } else {
+                            "Maç bulunamadı."
+                        }
                         binding.rvMatches.visibility = View.GONE
                     } else {
                         binding.tvNoMatches.visibility = View.GONE
                         binding.rvMatches.visibility = View.VISIBLE
-                        matchAdapter.submitList(result.data)
+                        if (isLiveTab) {
+                            liveMatchAdapter.submitList(result.data)
+                        } else {
+                            matchAdapter.submitList(result.data)
+                        }
                     }
                     binding.layoutError.visibility = View.GONE
                 }
@@ -107,6 +134,11 @@ class HomeFragment : Fragment() {
         }
         viewModel.topPredictions.observe(viewLifecycleOwner) { predictions ->
             topPredictionsAdapter.submitList(predictions)
+        }
+        viewModel.liveGoalPredictions.observe(viewLifecycleOwner) { labels ->
+            if (isLiveTab) {
+                liveMatchAdapter.setPredictionLabels(labels)
+            }
         }
     }
 

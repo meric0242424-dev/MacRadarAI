@@ -253,7 +253,18 @@ class FootballRepository(context: Context) {
 
     private fun sortFixturesByLeaguePriority(fixtures: List<FixtureResponse>): List<FixtureResponse> {
         val priorityLeagueIds = listOf(203, 39, 140, 78, 135, 61, 2, 3)
+        val liveStatuses = setOf("1H", "HT", "2H", "ET", "BT", "P", "LIVE")
+        val finishedStatuses = setOf("FT", "AET", "PEN", "CANC", "ABD", "AWD", "WO", "PST")
+
+        fun statusPriority(status: String): Int = when {
+            status in liveStatuses -> 0
+            status == "NS" -> 1
+            status in finishedStatuses -> 2
+            else -> 1
+        }
+
         return fixtures.sortedWith(compareBy(
+            { statusPriority(it.fixture.status.short) },
             { if (it.league.id in priorityLeagueIds) priorityLeagueIds.indexOf(it.league.id) else 999 },
             { it.fixture.timestamp }
         ))

@@ -251,6 +251,28 @@ class FootballRepository(context: Context) {
         }
     }
 
+    suspend fun generateLiveGoalPrediction(
+        homeTeamId: Int,
+        awayTeamId: Int,
+        leagueId: Int,
+        season: Int,
+        homeTeamName: String,
+        awayTeamName: String,
+        currentMinute: Int
+    ): Int = withContext(Dispatchers.IO) {
+        val homeStats = try {
+            (getTeamStatistics(homeTeamId, leagueId, season) as? Result.Success)?.data
+        } catch (e: Exception) { null }
+
+        val awayStats = try {
+            (getTeamStatistics(awayTeamId, leagueId, season) as? Result.Success)?.data
+        } catch (e: Exception) { null }
+
+        AIPredictionEngine.calculateLiveGoalProbability(
+            homeStats, awayStats, homeTeamId, awayTeamId, homeTeamName, awayTeamName, currentMinute
+        )
+    }
+
     private fun sortFixturesByLeaguePriority(fixtures: List<FixtureResponse>): List<FixtureResponse> {
         val priorityLeagueIds = listOf(203, 39, 140, 78, 135, 61, 2, 3)
         val liveStatuses = setOf("1H", "HT", "2H", "ET", "BT", "P", "LIVE")
